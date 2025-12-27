@@ -4,6 +4,7 @@ import Navbar from '@/components/common/Navbar';
 import Button from '@/components/common/Button';
 import useAxios from '@/hooks/useAxios';
 import { AuthContext } from '@/context/AuthContext';
+import toast from 'react-hot-toast';
 
 export default function AdminProducts() {
     const [products, setProducts] = useState([]);
@@ -36,13 +37,13 @@ export default function AdminProducts() {
         e.preventDefault();
         try {
             await axios.post('/products', formData);
-            alert('Product Added!');
+            toast.success('Product added successfully! 🎉');
             setShowForm(false);
             // Reset form
             setFormData({ name: '', category: 'Dairy', price: '', stock: '', shelfLifeDays: '', description: '', imageUrl: '' }); 
             fetchProducts(); // Refresh list
         } catch (error) {
-            alert('Failed to add product.');
+            toast.error('Failed to add product. Please try again.');
             console.error(error);
         }
     };

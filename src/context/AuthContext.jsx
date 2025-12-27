@@ -2,6 +2,7 @@
 import { createContext, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import useAxios from '@/hooks/useAxios';
+import toast from 'react-hot-toast';
 
 export const AuthContext = createContext();
 
@@ -38,7 +39,7 @@ export const AuthProvider = ({ children }) => {
     
     } catch (error) {
       console.error('Login failed:', error.response?.data?.message || error.message);
-      alert(error.response?.data?.message || 'Login failed. Check backend console.');
+      toast.error(error.response?.data?.message || 'Login failed. Please check your credentials.');
     }
   };
 
@@ -51,11 +52,11 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('token', data.token);
         setUser(data);
         router.push('/dashboard');
-        alert("Account created successfully!");
+        toast.success("Account created successfully! 🎉");
     
     } catch (error) {
         console.error("Registration failed", error.response?.data?.message || error.message);
-        alert(error.response?.data?.message || 'Registration failed. Check backend console.');
+        toast.error(error.response?.data?.message || 'Registration failed. Please try again.');
     }
   };
 
