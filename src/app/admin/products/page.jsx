@@ -79,7 +79,7 @@ export default function AdminProducts() {
                         <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <input 
                                 placeholder="Product Name" required
-                                className="border p-2 rounded"
+                                className="border p-2 rounded text-gray-900"
                                 value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})}
                             />
                             <select 
@@ -95,29 +95,29 @@ export default function AdminProducts() {
                             </select>
                             <input 
                                 type="number" placeholder="Price (৳)" required
-                                className="border p-2 rounded"
+                                className="border p-2 rounded text-gray-900"
                                 value={formData.price} onChange={(e) => setFormData({...formData, price: e.target.value})}
                             />
                             <input 
                                 type="number" placeholder="Stock Qty" required
-                                className="border p-2 rounded"
+                                className="border p-2 rounded text-gray-900"
                                 value={formData.stock} onChange={(e) => setFormData({...formData, stock: e.target.value})}
                             />
                             <input 
                                 type="number" placeholder="Shelf Life (Days)" required
-                                className="border p-2 rounded"
+                                className="border p-2 rounded text-gray-900"
                                 value={formData.shelfLifeDays} onChange={(e) => setFormData({...formData, shelfLifeDays: e.target.value})}
                             />
                             {/* IMAGE URL INPUT */}
                             <input 
                                 placeholder="Image URL (e.g. https://imgur.com/...)" 
-                                className="border p-2 rounded"
+                                className="border p-2 rounded text-gray-900"
                                 value={formData.imageUrl} onChange={(e) => setFormData({...formData, imageUrl: e.target.value})}
                             />
                             
                             <textarea 
                                 placeholder="Description"
-                                className="border p-2 rounded md:col-span-2"
+                                className="border p-2 rounded md:col-span-2 text-gray-900"
                                 value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})}
                             />
                             <Button type="submit" className="md:col-span-2">Save Product</Button>

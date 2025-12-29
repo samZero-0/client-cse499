@@ -106,7 +106,7 @@ export default function ProfilePage() {
                             disabled={!isEditing}
                             value={formData.name}
                             onChange={handleChange}
-                            className={`w-full p-3 rounded-lg border ${isEditing ? 'border-green-300 bg-white' : 'border-gray-200 bg-gray-50 text-gray-500'}`}
+                            className={`w-full p-3 rounded-lg border ${isEditing ? 'border-green-300 bg-white text-gray-900' : 'border-gray-200 bg-gray-50 text-gray-500'}`}
                         />
                     </div>
 
@@ -121,7 +121,7 @@ export default function ProfilePage() {
                             disabled={!isEditing}
                             value={formData.email}
                             onChange={handleChange}
-                            className={`w-full p-3 rounded-lg border ${isEditing ? 'border-green-300 bg-white' : 'border-gray-200 bg-gray-50 text-gray-500'}`}
+                            className={`w-full p-3 rounded-lg border ${isEditing ? 'border-green-300 bg-white text-gray-900' : 'border-gray-200 bg-gray-50 text-gray-500'}`}
                         />
                     </div>
 
@@ -136,7 +136,7 @@ export default function ProfilePage() {
                                     placeholder="New Password"
                                     value={formData.password}
                                     onChange={handleChange}
-                                    className="w-full p-2 border border-gray-300 rounded"
+                                    className="w-full p-2 border border-gray-300 rounded text-gray-900"
                                 />
                                 <input
                                     type="password"
@@ -144,7 +144,7 @@ export default function ProfilePage() {
                                     placeholder="Confirm New Password"
                                     value={formData.confirmPassword}
                                     onChange={handleChange}
-                                    className="w-full p-2 border border-gray-300 rounded"
+                                    className="w-full p-2 border border-gray-300 rounded text-gray-900"
                                 />
                             </div>
                         </div>

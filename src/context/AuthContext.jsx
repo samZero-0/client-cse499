@@ -16,13 +16,36 @@ export const AuthProvider = ({ children }) => {
     // Check if user is logged in on page load
     const checkUserLoggedIn = async () => {
       const token = localStorage.getItem('token');
-      if (token) {
-          // Optional: You could verify token validity with an API call here
-          // For now, we assume if token exists, user is logged in
-          // You might want to decode the token to get the user name if stored there
-          setUser({ name: 'User', role: 'user' }); 
+      const storedUser = localStorage.getItem('user');
+
+      if (!token) {
+        setLoading(false);
+        return;
       }
-      setLoading(false);
+
+      // If we have stored user data, prefer that for instant hydration
+      if (storedUser) {
+        try {
+          setUser(JSON.parse(storedUser));
+          setLoading(false);
+          return;
+        } catch (err) {
+          console.error('Failed to parse stored user', err);
+        }
+      }
+
+      // Fallback: try to fetch the current user profile
+      try {
+        const { data } = await axios.get('/auth/me');
+        setUser(data);
+        localStorage.setItem('user', JSON.stringify(data));
+      } catch (err) {
+        console.error('Failed to fetch user profile', err);
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+      } finally {
+        setLoading(false);
+      }
     };
     checkUserLoggedIn();
   }, []);
@@ -33,8 +56,11 @@ export const AuthProvider = ({ children }) => {
       const { data } = await axios.post('/auth/login', { email, password });
       
       // If successful, save token and user data
-      localStorage.setItem('token', data.token);
-      setUser(data); // Backend returns { _id, name, email, role, token }
+      const userData = data.user ?? data;
+      const token = data.token ?? userData.token;
+      if (token) localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(userData));
+      setUser(userData);
       router.push('/dashboard');
     
     } catch (error) {
@@ -49,8 +75,11 @@ export const AuthProvider = ({ children }) => {
         const { data } = await axios.post('/auth/register', userData);
         
         // If successful, save token and user data
-        localStorage.setItem('token', data.token);
-        setUser(data);
+        const newUser = data.user ?? data;
+        const token = data.token ?? newUser.token;
+        if (token) localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(newUser));
+        setUser(newUser);
         router.push('/dashboard');
         toast.success("Account created successfully! 🎉");
     
@@ -62,6 +91,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('user');
     setUser(null);
     router.push('/login');
   };

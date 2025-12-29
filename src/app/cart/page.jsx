@@ -332,7 +332,7 @@ export default function CartPage() {
                       type="text"
                       value={customerInfo.name}
                       onChange={(e) => setCustomerInfo({...customerInfo, name: e.target.value})}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-gray-900"
                       placeholder="Enter your name"
                     />
                   </div>
@@ -344,7 +344,7 @@ export default function CartPage() {
                       type="tel"
                       value={customerInfo.phone}
                       onChange={(e) => setCustomerInfo({...customerInfo, phone: e.target.value})}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-gray-900"
                       placeholder="01XXXXXXXXX"
                     />
                   </div>
@@ -356,7 +356,7 @@ export default function CartPage() {
                       type="email"
                       value={customerInfo.email}
                       onChange={(e) => setCustomerInfo({...customerInfo, email: e.target.value})}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-gray-900"
                       placeholder="your@email.com"
                     />
                   </div>
@@ -377,7 +377,7 @@ export default function CartPage() {
                     <textarea
                       value={customerInfo.address}
                       onChange={(e) => setCustomerInfo({...customerInfo, address: e.target.value})}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-gray-900"
                       rows="3"
                       placeholder="House/Flat, Street, Area"
                     ></textarea>
@@ -390,7 +390,7 @@ export default function CartPage() {
                       type="text"
                       value={customerInfo.city}
                       onChange={(e) => setCustomerInfo({...customerInfo, city: e.target.value})}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-gray-900"
                       placeholder="Dhaka, Chittagong, etc."
                     />
                   </div>

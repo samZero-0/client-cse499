@@ -4,6 +4,7 @@ import { useContext, useState, useEffect } from 'react';
 import { AuthContext } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
 import { FaShoppingBasket, FaLeaf, FaBars, FaTimes, FaUser } from 'react-icons/fa';
+import ChatBot from '../ai/ChatBot';
 
 export default function Navbar() {
   const { user, logout } = useContext(AuthContext);
@@ -67,12 +68,17 @@ export default function Navbar() {
                   My Pantry
                   <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-emerald-500 to-teal-500 group-hover:w-full transition-all duration-300"></span>
                 </Link>
+                
                 <Link href="/subscription" className={`relative group py-2 ${
                   isScrolled ? 'text-gray-700 hover:text-emerald-600' : 'hover:text-emerald-100'
                 } transition-colors`}>
                   Subscriptions
                   <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-emerald-500 to-teal-500 group-hover:w-full transition-all duration-300"></span>
                 </Link>
+
+                <div className="border-l pl-6 border-gray-200">
+              <ChatBot /> 
+           </div>
               </>
             )}
           </div>
