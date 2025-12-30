@@ -31,7 +31,8 @@ export const CartProvider = ({ children }) => {
       // Transform backend data to frontend format if needed
       // (Our backend populates 'product', so we flatten it for easy UI use)
       const formattedItems = items.map(item => ({
-          _id: item.product._id, // Keep Product ID as the main ID for UI
+          _id: item._id, // Keep Cart Item ID for API calls (DELETE, UPDATE)
+          productId: item.product._id, // Also store product ID for reference
           name: item.name,
           price: item.price,
           image: item.image || item.product.imageUrl,
@@ -83,9 +84,11 @@ export const CartProvider = ({ children }) => {
   const removeFromCart = async (productId) => {
     try {
         await axios.delete(`/cart/${productId}`);
-        fetchCart();
+        // Immediately fetch the fresh cart to sync UI
+        await fetchCart(); 
+        // Optional: toast.success("Item removed");
     } catch (error) {
-        console.error(error);
+        console.error("Failed to remove item:", error);
     }
   };
 

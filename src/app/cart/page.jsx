@@ -1,22 +1,24 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect, useContext, Suspense } from 'react';
 import Navbar from '@/components/common/Navbar';
 import { useCart } from '@/context/CartContext';
+import { AuthContext } from '@/context/AuthContext';
 import useAxios from '@/hooks/useAxios';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { 
   FaTrash, FaShoppingBag, FaTruck, FaTag, FaCheckCircle, FaTimes,
-  FaPlus, FaMinus, FaArrowRight, FaGift, FaCreditCard, FaMapMarkerAlt,
-  FaUser, FaPhone, FaEnvelope
+  FaPlus, FaMinus, FaArrowRight, FaGift, FaUser, FaMapMarkerAlt, FaSave
 } from 'react-icons/fa';
-import toast from 'react-hot-toast';
+import toast, { Toaster } from 'react-hot-toast';
 
-export default function CartPage() {
-  const { cartItems, removeFromCart, updateQuantity, clearCart, total } = useCart();
+function CartPageContent() {
+  const { cartItems, removeFromCart, updateQuantity, clearCart, total, fetchCart } = useCart();
+  const { user } = useContext(AuthContext);
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [deliveryFee] = useState(60);
-  const [discount] = useState(0);
+  const [saveInfo, setSaveInfo] = useState(false); // <--- Checkbox State
+  
+  // Checkout Form State
   const [customerInfo, setCustomerInfo] = useState({
     name: '',
     phone: '',
@@ -25,41 +27,56 @@ export default function CartPage() {
     city: '',
     paymentMethod: 'Cash on Delivery'
   });
-  
+
   const axios = useAxios();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
-  const subtotal = total;
-  const finalTotal = subtotal + deliveryFee - discount;
-
-  const handleQuantityChange = (productId, change) => {
-    const item = cartItems.find(item => item._id === productId);
-    if (item) {
-      const newQuantity = Math.max(1, item.quantity + change);
-      updateQuantity(productId, newQuantity);
+  // 1. SMART CHECKOUT TRIGGER (From AI)
+  useEffect(() => {
+    if (searchParams.get('openCheckout') === 'true') {
+      setShowCheckoutModal(true);
+      // Clean up URL without refresh
+      window.history.replaceState(null, '', '/cart');
     }
-  };
+  }, [searchParams]);
 
-  const openCheckoutModal = () => {
-    setShowCheckoutModal(true);
-  };
+  // 2. Pre-fill Form if User Data exists
+  useEffect(() => {
+    if (user) {
+      setCustomerInfo(prev => ({
+        ...prev,
+        name: user.name || '',
+        email: user.email || '',
+        phone: user.phone || '',       // Assuming you added phone to User model
+        address: user.address || '',   // Assuming you added address to User model
+        city: user.city || ''          // Assuming you added city to User model
+      }));
+    }
+  }, [user]);
 
-  const closeCheckoutModal = () => {
-    setShowCheckoutModal(false);
+  const deliveryFee = 60;
+  const discount = 0;
+  const finalTotal = total + deliveryFee - discount;
+
+  const handleQuantityChange = (productId, change, currentQty) => {
+    const newQuantity = Math.max(1, currentQty + change);
+    updateQuantity(productId, newQuantity);
   };
 
   const handleConfirmCheckout = async () => {
-    // Validate customer info
+    // Validation
     if (!customerInfo.name || !customerInfo.phone || !customerInfo.address || !customerInfo.city) {
-      toast.error('Please fill in all required fields');
+      toast.error('Please fill in all required fields marked with *');
       return;
     }
 
     setIsProcessing(true);
     try {
+      // A. Create Order
       const orderData = {
         orderItems: cartItems.map(item => ({
-          product: item._id,
+          product: item._id, // Ensure this matches your Context structure
           name: item.name,
           qty: item.quantity,
           price: item.price
@@ -71,433 +88,336 @@ export default function CartPage() {
         },
         paymentMethod: customerInfo.paymentMethod,
         customerInfo: {
-          name: customerInfo.name,
-          phone: customerInfo.phone,
-          email: customerInfo.email
+            name: customerInfo.name,
+            phone: customerInfo.phone,
+            email: customerInfo.email
         }
       };
 
       await axios.post('/orders', orderData);
-      
-      // Success animation
+
+      // B. Save User Info (If Checkbox Checked) - For "Smart Checkout" next time
+      if (saveInfo) {
+          try {
+            await axios.put('/users/profile', {
+                name: customerInfo.name,
+                phone: customerInfo.phone,
+                address: customerInfo.address,
+                city: customerInfo.city
+            });
+            toast.success("Address saved for future AI checkouts!");
+          } catch (err) {
+            console.error("Failed to save profile info", err);
+          }
+      }
+
+      // C. Success & Cleanup
       setIsProcessing(false);
-      toast.success('🎉 Order placed successfully!', { duration: 4000 });
-      clearCart();
-      closeCheckoutModal();
-      setTimeout(() => router.push('/dashboard'), 1000);
+      toast.success('🎉 Order placed successfully!');
+      clearCart(); // Clear Context & DB
+      setShowCheckoutModal(false);
+      
+      setTimeout(() => router.push('/dashboard'), 1500);
+
     } catch (error) {
       setIsProcessing(false);
       console.error(error);
-      toast.error('Checkout failed. Please make sure you are logged in.');
+      toast.error('Checkout failed. Please try again.');
     }
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-gray-50 via-gray-100 to-gray-50">
+    <div className="min-h-screen flex flex-col bg-gray-50">
       <Navbar />
+      <Toaster position="top-center" />
+      
       <div className="container mx-auto px-4 py-8 flex-grow">
         
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent mb-2 flex items-center gap-3">
+          <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-3">
             <FaShoppingBag className="text-emerald-600" />
             Shopping Cart
           </h1>
-          <p className="text-gray-600 text-lg">
-            {cartItems.length > 0 ? `${cartItems.length} item${cartItems.length > 1 ? 's' : ''} in your cart` : 'Your cart is empty'}
+          <p className="text-gray-500">
+            {cartItems.length > 0 ? `You have ${cartItems.length} items ready for checkout.` : 'Your cart is empty.'}
           </p>
         </div>
         
         {cartItems.length === 0 ? (
-          <div className="text-center py-20 bg-white rounded-2xl shadow-lg border border-gray-200">
-            <div className="w-32 h-32 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <FaShoppingBag className="text-6xl text-gray-400" />
+          <div className="text-center py-20 bg-white rounded-2xl shadow-sm border border-gray-200">
+            <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <FaShoppingBag className="text-4xl text-gray-400" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-3">Your Cart is Empty</h2>
-            <p className="text-gray-500 mb-6 max-w-md mx-auto">
-              Looks like you haven't added any items yet. Start shopping to fill your cart!
-            </p>
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">Cart is Empty</h2>
+            <p className="text-gray-500 mb-6">Go add some goodies to your cart!</p>
             <button 
               onClick={() => router.push('/products')}
-              className="px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl hover:from-emerald-700 hover:to-teal-700 font-bold text-lg transition-all shadow-lg hover:shadow-xl inline-flex items-center gap-3"
+              className="px-8 py-3 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 font-bold transition shadow-lg"
             >
-              <FaShoppingBag />
               Start Shopping
             </button>
           </div>
         ) : (
           <div className="grid lg:grid-cols-3 gap-8">
-            {/* Cart Items */}
+            
+            {/* --- LEFT COLUMN: ITEMS --- */}
             <div className="lg:col-span-2 space-y-4">
-              {/* Free Delivery Banner */}
-              <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white p-4 rounded-xl flex items-center gap-3 shadow-md">
-                <FaTruck className="text-2xl" />
+              {/* Delivery Banner */}
+              <div className="bg-emerald-50 border border-emerald-100 p-4 rounded-xl flex items-center gap-3 text-emerald-800">
+                <FaTruck className="text-xl" />
                 <div>
-                  <p className="font-bold">Free Delivery Available!</p>
-                  <p className="text-sm text-green-50">Your order qualifies for free shipping</p>
+                  <p className="font-bold text-sm">Standard Delivery (৳{deliveryFee})</p>
+                  <p className="text-xs">Estimated delivery: 24-48 hours</p>
                 </div>
               </div>
 
-              {/* Cart Items List */}
+              {/* Items List */}
               <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-                {cartItems.map((item, index) => (
-                  <div 
-                    key={item._id} 
-                    className="group flex flex-col sm:flex-row items-start sm:items-center justify-between p-6 border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-all duration-300"
-                    style={{ animation: `fadeInUp 0.3s ease-out ${index * 0.05}s` }}
-                  >
-                    <div className="flex items-start gap-4 flex-grow w-full sm:w-auto mb-4 sm:mb-0">
-                      {/* Product Image */}
-                      <div className="w-24 h-24 rounded-xl overflow-hidden border-2 border-gray-200 flex-shrink-0 group-hover:border-emerald-300 transition-all">
-                        <img 
-                          src={item.imageUrl || 'https://placehold.co/150x150?text=Product'} 
-                          alt={item.name}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                        />
-                      </div>
-                      
-                      <div className="flex-grow">
-                        <h3 className="font-bold text-gray-900 text-lg mb-1">{item.name}</h3>
-                        <p className="text-gray-500 text-sm mb-2">Unit Price: ৳{item.price}</p>
-                        
-                        {/* Quantity Controls */}
-                        <div className="flex items-center gap-3">
-                          <div className="flex items-center gap-1 bg-gray-100 border border-gray-300 rounded-lg overflow-hidden">
-                            <button 
-                              onClick={() => handleQuantityChange(item._id, -1)}
-                              className="p-2 hover:bg-red-50 text-red-600 transition-colors"
-                            >
-                              <FaMinus className="text-xs" />
-                            </button>
-                            <span className="font-bold text-gray-800 px-4 text-center min-w-[3rem]">
-                              {item.quantity}
-                            </span>
-                            <button 
-                              onClick={() => handleQuantityChange(item._id, 1)}
-                              className="p-2 hover:bg-green-50 text-green-600 transition-colors"
-                            >
-                              <FaPlus className="text-xs" />
-                            </button>
-                          </div>
-                          
-                          <button
-                            onClick={() => removeFromCart(item._id)}
-                            className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors flex items-center gap-2"
-                          >
-                            <FaTrash className="text-sm" />
-                            <span className="text-sm font-medium hidden sm:inline">Remove</span>
-                          </button>
-                        </div>
-                      </div>
+                {cartItems.map((item) => (
+                  <div key={item._id} className="p-6 border-b border-gray-100 last:border-0 flex flex-col sm:flex-row gap-4 items-center">
+                    {/* Image */}
+                    <div className="w-20 h-20 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+                      <img 
+                        src={item.imageUrl || item.image || 'https://placehold.co/100'} 
+                        alt={item.name} 
+                        className="w-full h-full object-cover"
+                      />
                     </div>
-                    
-                    {/* Item Total */}
-                    <div className="text-right sm:ml-4 w-full sm:w-auto flex sm:block justify-between items-center">
-                      <span className="text-sm text-gray-500 sm:hidden">Subtotal:</span>
-                      <p className="font-bold text-2xl text-emerald-600">
-                        ৳{item.price * item.quantity}
-                      </p>
+
+                    {/* Details */}
+                    <div className="flex-grow text-center sm:text-left">
+                      <h3 className="font-bold text-gray-800">{item.name}</h3>
+                      <p className="text-emerald-600 font-medium">৳{item.price}</p>
+                    </div>
+
+                    {/* Controls */}
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center border border-gray-300 rounded-lg">
+                        <button 
+                          onClick={() => handleQuantityChange(item._id, -1, item.quantity)}
+                          className="px-3 py-1 hover:bg-gray-100 text-gray-600"
+                        >
+                          <FaMinus size={10} />
+                        </button>
+                        <span className="px-2 font-bold text-gray-800 text-sm">{item.quantity}</span>
+                        <button 
+                          onClick={() => handleQuantityChange(item._id, 1, item.quantity)}
+                          className="px-3 py-1 hover:bg-gray-100 text-gray-600"
+                        >
+                          <FaPlus size={10} />
+                        </button>
+                      </div>
+                      <button
+                        onClick={async () => {
+                          try {
+                            await removeFromCart(item._id);
+                            toast.success("Item removed from cart!", { icon: '🗑️' });
+                          } catch (error) {
+                            toast.error("Failed to remove item");
+                          }
+                        }}
+                        className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition"
+                        title="Remove Item"
+                      >
+                        <FaTrash />
+                      </button>
                     </div>
                   </div>
                 ))}
               </div>
-
-              {/* Continue Shopping Button */}
-              <button
-                onClick={() => router.push('/products')}
-                className="w-full py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all font-medium flex items-center justify-center gap-2"
-              >
-                <FaShoppingBag />
-                Continue Shopping
-              </button>
             </div>
 
-            {/* Order Summary */}
+            {/* --- RIGHT COLUMN: SUMMARY --- */}
             <div className="space-y-4">
-              {/* Summary Card */}
-              <div className="bg-white rounded-2xl shadow-lg border-2 border-gray-200 overflow-hidden sticky top-24">
-                <div className="bg-gradient-to-r from-emerald-600 to-teal-600 p-6 text-white">
-                  <h3 className="text-2xl font-bold mb-1">Order Summary</h3>
-                  <p className="text-emerald-50 text-sm">{cartItems.length} items</p>
-                </div>
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 sticky top-24">
+                <h3 className="text-lg font-bold text-gray-800 mb-4">Order Summary</h3>
                 
-                <div className="p-6 space-y-4">
-                  {/* Pricing Breakdown */}
-                  <div className="space-y-3">
-                    <div className="flex justify-between text-gray-700">
-                      <span>Subtotal</span>
-                      <span className="font-semibold">৳{subtotal}</span>
-                    </div>
-                    <div className="flex justify-between text-gray-700">
-                      <span className="flex items-center gap-2">
-                        <FaTruck className="text-emerald-600" />
-                        Delivery Fee
-                      </span>
-                      <span className="font-semibold">৳{deliveryFee}</span>
-                    </div>
-                    {discount > 0 && (
-                      <div className="flex justify-between text-green-600">
-                        <span className="flex items-center gap-2">
-                          <FaTag />
-                          Discount
-                        </span>
-                        <span className="font-semibold">- ৳{discount}</span>
-                      </div>
-                    )}
+                <div className="space-y-3 text-sm border-b border-gray-100 pb-4 mb-4">
+                  <div className="flex justify-between text-gray-600">
+                    <span>Subtotal</span>
+                    <span>৳{total}</span>
                   </div>
-
-                  {/* Divider */}
-                  <div className="border-t-2 border-gray-200 pt-4">
-                    <div className="flex justify-between items-center mb-4">
-                      <span className="text-xl font-bold text-gray-900">Total</span>
-                      <span className="text-3xl font-bold text-emerald-600">৳{finalTotal}</span>
-                    </div>
-                  </div>
-
-                  {/* Checkout Button */}
-                  <button
-                    onClick={openCheckoutModal}
-                    className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 text-white py-4 rounded-xl hover:from-emerald-700 hover:to-teal-700 font-bold text-lg transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-3 group"
-                  >
-                    Proceed to Checkout
-                    <FaArrowRight className="group-hover:translate-x-1 transition-transform" />
-                  </button>
-
-                  {/* Security Badge */}
-                  <div className="flex items-center justify-center gap-2 text-sm text-gray-500 pt-2">
-                    <FaCheckCircle className="text-green-500" />
-                    <span>Secure Checkout</span>
+                  <div className="flex justify-between text-gray-600">
+                    <span>Delivery</span>
+                    <span>৳{deliveryFee}</span>
                   </div>
                 </div>
-              </div>
 
-              {/* Promo Card */}
-              <div className="bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl p-6 text-white shadow-lg">
-                <div className="flex items-center gap-2 mb-3">
-                  <FaGift className="text-2xl" />
-                  <h3 className="font-bold text-xl">Special Offer!</h3>
+                <div className="flex justify-between items-center mb-6">
+                  <span className="text-xl font-bold text-gray-900">Total</span>
+                  <span className="text-xl font-bold text-emerald-600">৳{finalTotal}</span>
                 </div>
-                <p className="text-white/90 text-sm mb-4">
-                  Subscribe and save 15% on recurring orders
-                </p>
+
                 <button
-                  onClick={() => router.push('/subscription')}
-                  className="w-full py-2 bg-white text-orange-600 rounded-lg font-semibold text-sm hover:bg-orange-50 transition-all"
+                  onClick={() => setShowCheckoutModal(true)}
+                  className="w-full py-4 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 font-bold shadow-lg transition flex items-center justify-center gap-2"
                 >
-                  Learn More
+                  Proceed to Checkout <FaArrowRight />
+                </button>
+
+                <p className="text-xs text-center text-gray-400 mt-4 flex items-center justify-center gap-1">
+                  <FaCheckCircle className="text-green-500" /> Secure Checkout
+                </p>
+              </div>
+              
+              {/* Promo / Subscription Ad */}
+              <div className="bg-gradient-to-br from-orange-400 to-red-500 rounded-2xl p-6 text-white shadow-md">
+                <div className="flex items-center gap-2 mb-2">
+                  <FaGift className="text-xl" />
+                  <h3 className="font-bold">Buying often?</h3>
+                </div>
+                <p className="text-sm opacity-90 mb-4">
+                  Create a monthly subscription for these items and save 10%!
+                </p>
+                <button onClick={() => toast("Ask the AI Chatbot to 'Subscribe'!", { icon: '🤖' })} className="w-full py-2 bg-white text-orange-600 rounded-lg font-bold text-sm">
+                  Ask AI to Subscribe
                 </button>
               </div>
             </div>
+
           </div>
         )}
       </div>
 
-      {/* Checkout Modal */}
+      {/* --- CHECKOUT MODAL --- */}
       {showCheckoutModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
-          <div 
-            className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
-            style={{ animation: 'scaleIn 0.3s ease-out' }}
-          >
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-scale-in">
+            
             {/* Modal Header */}
-            <div className="bg-gradient-to-r from-emerald-600 to-teal-600 p-6 text-white sticky top-0 z-10">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-2xl font-bold mb-1">Checkout Confirmation</h2>
-                  <p className="text-emerald-50 text-sm">Review your order and complete purchase</p>
-                </div>
-                <button
-                  onClick={closeCheckoutModal}
-                  className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center hover:bg-white/30 transition-all"
-                >
-                  <FaTimes />
-                </button>
-              </div>
+            <div className="bg-gray-50 p-4 border-b border-gray-200 flex justify-between items-center sticky top-0 z-10">
+              <h2 className="text-xl font-bold text-gray-800">Checkout Details</h2>
+              <button onClick={() => setShowCheckoutModal(false)} className="p-2 hover:bg-gray-200 rounded-full text-gray-500">
+                <FaTimes />
+              </button>
             </div>
 
-            {/* Modal Content */}
+            {/* Modal Body */}
             <div className="p-6 space-y-6">
-              {/* Customer Information Form */}
+              
+              {/* Personal Info */}
               <div>
-                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  <FaUser className="text-emerald-600" />
-                  Customer Information
+                <h3 className="text-sm font-bold text-emerald-600 uppercase mb-3 flex items-center gap-2">
+                   <FaUser /> Contact Info
                 </h3>
                 <div className="grid md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Full Name *
-                    </label>
-                    <input
-                      type="text"
+                    <label className="block text-xs font-bold text-gray-500 mb-1">Full Name *</label>
+                    <input 
+                      type="text" 
                       value={customerInfo.name}
                       onChange={(e) => setCustomerInfo({...customerInfo, name: e.target.value})}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-gray-900"
-                      placeholder="Enter your name"
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Phone Number *
-                    </label>
-                    <input
-                      type="tel"
+                    <label className="block text-xs font-bold text-gray-500 mb-1">Phone Number *</label>
+                    <input 
+                      type="text" 
                       value={customerInfo.phone}
                       onChange={(e) => setCustomerInfo({...customerInfo, phone: e.target.value})}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-gray-900"
-                      placeholder="01XXXXXXXXX"
+                      placeholder="017..."
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
                     />
                   </div>
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Email Address
-                    </label>
-                    <input
-                      type="email"
+                    <label className="block text-xs font-bold text-gray-500 mb-1">Email</label>
+                    <input 
+                      type="email" 
                       value={customerInfo.email}
                       onChange={(e) => setCustomerInfo({...customerInfo, email: e.target.value})}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-gray-900"
-                      placeholder="your@email.com"
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
                     />
                   </div>
                 </div>
               </div>
 
-              {/* Delivery Address */}
+              {/* Address Info */}
               <div>
-                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  <FaMapMarkerAlt className="text-emerald-600" />
-                  Delivery Address
+                <h3 className="text-sm font-bold text-emerald-600 uppercase mb-3 flex items-center gap-2">
+                   <FaMapMarkerAlt /> Delivery Details
                 </h3>
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Street Address *
-                    </label>
-                    <textarea
+                    <label className="block text-xs font-bold text-gray-500 mb-1">Full Address *</label>
+                    <textarea 
+                      rows="2"
                       value={customerInfo.address}
                       onChange={(e) => setCustomerInfo({...customerInfo, address: e.target.value})}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-gray-900"
-                      rows="3"
-                      placeholder="House/Flat, Street, Area"
-                    ></textarea>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      City *
-                    </label>
-                    <input
-                      type="text"
-                      value={customerInfo.city}
-                      onChange={(e) => setCustomerInfo({...customerInfo, city: e.target.value})}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-gray-900"
-                      placeholder="Dhaka, Chittagong, etc."
+                      placeholder="House, Road, Area..."
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Payment Method
-                    </label>
-                    <select
+                    <label className="block text-xs font-bold text-gray-500 mb-1">City *</label>
+                    <input 
+                      type="text" 
+                      value={customerInfo.city}
+                      onChange={(e) => setCustomerInfo({...customerInfo, city: e.target.value})}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 mb-1">Payment Method</label>
+                    <select 
                       value={customerInfo.paymentMethod}
                       onChange={(e) => setCustomerInfo({...customerInfo, paymentMethod: e.target.value})}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none bg-white"
                     >
                       <option>Cash on Delivery</option>
-                      <option>Credit/Debit Card</option>
-                      <option>Mobile Banking</option>
+                      <option>Credit Card</option>
+                      <option>Bkash / Nagad</option>
                     </select>
                   </div>
                 </div>
               </div>
 
-              {/* Order Summary */}
-              <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl p-6 border-2 border-emerald-200">
-                <h3 className="text-lg font-bold text-gray-900 mb-4">Order Summary</h3>
-                <div className="space-y-2 mb-4">
-                  {cartItems.map(item => (
-                    <div key={item._id} className="flex justify-between text-sm">
-                      <span className="text-gray-700">
-                        {item.name} × {item.quantity}
-                      </span>
-                      <span className="font-semibold text-gray-900">৳{item.price * item.quantity}</span>
-                    </div>
-                  ))}
-                </div>
-                <div className="border-t-2 border-emerald-300 pt-4 space-y-2">
-                  <div className="flex justify-between text-gray-700">
-                    <span>Subtotal</span>
-                    <span className="font-semibold">৳{subtotal}</span>
-                  </div>
-                  <div className="flex justify-between text-gray-700">
-                    <span>Delivery</span>
-                    <span className="font-semibold">৳{deliveryFee}</span>
-                  </div>
-                  <div className="flex justify-between text-xl font-bold text-gray-900 pt-2">
-                    <span>Total</span>
-                    <span className="text-emerald-600">৳{finalTotal}</span>
-                  </div>
-                </div>
+              {/* --- SAVE INFO CHECKBOX --- */}
+              <div className="bg-emerald-50 p-3 rounded-lg flex items-center gap-3 border border-emerald-100">
+                <input 
+                    type="checkbox" 
+                    id="saveInfo"
+                    checked={saveInfo}
+                    onChange={(e) => setSaveInfo(e.target.checked)}
+                    className="w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500"
+                />
+                <label htmlFor="saveInfo" className="text-sm text-gray-700 cursor-pointer select-none">
+                    <strong>Save this address?</strong> <br/>
+                    <span className="text-xs text-gray-500">Enable "Smart Checkout" so the AI won't ask for details next time.</span>
+                </label>
               </div>
 
-              {/* Action Buttons */}
-              <div className="flex gap-3 pt-4">
-                <button
-                  onClick={closeCheckoutModal}
-                  disabled={isProcessing}
-                  className="flex-1 px-6 py-4 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 font-bold transition-all disabled:opacity-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleConfirmCheckout}
-                  disabled={isProcessing}
-                  className="flex-1 px-6 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl hover:from-emerald-700 hover:to-teal-700 font-bold transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-3 disabled:opacity-50"
-                >
-                  {isProcessing ? (
-                    <>
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      Processing...
-                    </>
-                  ) : (
-                    <>
-                      <FaCheckCircle />
-                      Confirm & Place Order
-                    </>
-                  )}
-                </button>
-              </div>
             </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 border-t border-gray-200 bg-gray-50 flex gap-4 sticky bottom-0">
+              <button 
+                onClick={() => setShowCheckoutModal(false)}
+                className="flex-1 py-3 bg-white border border-gray-300 text-gray-700 rounded-xl font-bold hover:bg-gray-100"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handleConfirmCheckout}
+                disabled={isProcessing}
+                className="flex-[2] py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 shadow-lg disabled:opacity-70 flex items-center justify-center gap-2"
+              >
+                {isProcessing ? 'Processing...' : `Confirm Order (৳${finalTotal})`}
+              </button>
+            </div>
+
           </div>
         </div>
       )}
-
-      <style jsx>{`
-        @keyframes fadeInUp {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        @keyframes scaleIn {
-          from {
-            opacity: 0;
-            transform: scale(0.9);
-          }
-          to {
-            opacity: 1;
-            transform: scale(1);
-          }
-        }
-      `}</style>
     </div>
+  );
+}
+
+export default function CartPage() {
+  return (
+    <Suspense fallback={<div className="p-6 text-gray-700">Loading cart...</div>}>
+      <CartPageContent />
+    </Suspense>
   );
 }

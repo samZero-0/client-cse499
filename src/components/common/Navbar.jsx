@@ -75,16 +75,15 @@ export default function Navbar() {
                   Subscriptions
                   <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-emerald-500 to-teal-500 group-hover:w-full transition-all duration-300"></span>
                 </Link>
-
-                <div className="border-l pl-6 border-gray-200">
-              <ChatBot /> 
-           </div>
               </>
             )}
           </div>
 
           {/* Right Side Actions */}
           <div className="flex items-center gap-4">
+            <div className="flex items-center">
+              <ChatBot />
+            </div>
             {/* Cart Icon */}
             <Link href="/cart" className={`relative p-2 rounded-xl transition-all duration-300 ${
               isScrolled 
