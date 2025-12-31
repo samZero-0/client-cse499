@@ -79,6 +79,203 @@ export default function Home() {
         </div>
       </section>
 
+      {/* AI Agent Tutorial Section */}
+      <section className="py-20 lg:py-32 bg-white relative overflow-hidden">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <div className="inline-block mb-4 animate-fade-in-down">
+              <span className="bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 px-5 py-2 rounded-full text-sm font-bold shadow-md">
+                🤖 AI-Powered Shopping
+              </span>
+            </div>
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-gray-900 mb-6 animate-fade-in-up">
+              Meet Your <span className="bg-gradient-to-r from-purple-600 via-pink-600 to-rose-600 bg-clip-text text-transparent">Smart Assistant</span>
+            </h2>
+            <p className="text-xl md:text-2xl text-gray-600 max-w-3xl mx-auto leading-relaxed animate-fade-in-up animation-delay-200">
+              Watch how our AI agent simplifies your shopping experience from start to finish
+            </p>
+          </div>
+
+          <div className="max-w-7xl mx-auto">
+            <div className="grid lg:grid-cols-2 gap-12 items-center">
+              {/* Interactive Demo Visualization */}
+              <div className="relative order-2 lg:order-1">
+                <div className="bg-gradient-to-br from-purple-50 via-pink-50 to-rose-50 rounded-3xl p-8 shadow-2xl border border-purple-100">
+                  {/* Chat Interface Mockup */}
+                  <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+                    <div className="bg-gradient-to-r from-purple-600 to-pink-600 px-6 py-4 flex items-center gap-3">
+                      <div className="w-3 h-3 rounded-full bg-red-400"></div>
+                      <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
+                      <div className="w-3 h-3 rounded-full bg-green-400"></div>
+                      <span className="ml-auto text-white font-semibold text-sm">AI Shopping Assistant</span>
+                    </div>
+                    
+                    <div className="p-6 space-y-4 h-96 overflow-hidden">
+                      {/* User Message */}
+                      <div className="flex justify-end animate-fade-in-up">
+                        <div className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-5 py-3 rounded-2xl rounded-tr-sm max-w-xs shadow-md">
+                          <p className="text-sm font-medium">I need milk, eggs, and bread for this week</p>
+                        </div>
+                      </div>
+
+                      {/* AI Response - Adding to Cart */}
+                      <div className="flex gap-3 animate-fade-in-up animation-delay-200">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold flex-shrink-0 shadow-lg">
+                          AI
+                        </div>
+                        <div className="bg-gray-100 px-5 py-3 rounded-2xl rounded-tl-sm max-w-md shadow-md">
+                          <p className="text-sm text-gray-800 mb-3">Perfect! I found these items for you:</p>
+                          <div className="space-y-2">
+                            <div className="bg-white p-3 rounded-lg flex items-center gap-3 animate-fade-in-up animation-delay-400 shadow-sm border border-gray-200">
+                              <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg flex items-center justify-center text-2xl">
+                                🥛
+                              </div>
+                              <div className="flex-1">
+                                <p className="font-semibold text-sm text-gray-900">Organic Whole Milk</p>
+                                <p className="text-xs text-gray-600">$3.99</p>
+                              </div>
+                              <div className="text-green-600 font-bold text-lg">✓</div>
+                            </div>
+                            <div className="bg-white p-3 rounded-lg flex items-center gap-3 animate-fade-in-up animation-delay-600 shadow-sm border border-gray-200">
+                              <div className="w-12 h-12 bg-gradient-to-br from-yellow-100 to-yellow-200 rounded-lg flex items-center justify-center text-2xl">
+                                🥚
+                              </div>
+                              <div className="flex-1">
+                                <p className="font-semibold text-sm text-gray-900">Free Range Eggs (12)</p>
+                                <p className="text-xs text-gray-600">$4.49</p>
+                              </div>
+                              <div className="text-green-600 font-bold text-lg">✓</div>
+                            </div>
+                            <div className="bg-white p-3 rounded-lg flex items-center gap-3 animate-fade-in-up animation-delay-800 shadow-sm border border-gray-200">
+                              <div className="w-12 h-12 bg-gradient-to-br from-amber-100 to-amber-200 rounded-lg flex items-center justify-center text-2xl">
+                                🍞
+                              </div>
+                              <div className="flex-1">
+                                <p className="font-semibold text-sm text-gray-900">Whole Wheat Bread</p>
+                                <p className="text-xs text-gray-600">$2.99</p>
+                              </div>
+                              <div className="text-green-600 font-bold text-lg">✓</div>
+                            </div>
+                          </div>
+                          <div className="mt-3 pt-3 border-t border-gray-300">
+                            <p className="text-sm font-semibold text-gray-800">
+                              ✅ Added to cart • Total: <span className="text-emerald-600">$11.47</span>
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* AI Suggestions */}
+                      <div className="flex gap-3 animate-fade-in-up animation-delay-1000">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold flex-shrink-0 shadow-lg">
+                          AI
+                        </div>
+                        <div className="bg-gradient-to-br from-purple-100 to-pink-100 px-5 py-3 rounded-2xl rounded-tl-sm max-w-md shadow-md border border-purple-200">
+                          <p className="text-sm text-gray-800 font-medium mb-2">💡 Smart Suggestion:</p>
+                          <p className="text-sm text-gray-700">Would you like to add these to a weekly subscription? You'll save 15% and never run out!</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Input Area */}
+                    <div className="border-t border-gray-200 p-4 bg-gray-50">
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="text"
+                          placeholder="Type your message..."
+                          className="flex-1 px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+                          disabled
+                        />
+                        <button className="w-10 h-10 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all">
+                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/>
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Floating Feature Badges */}
+                <div className="absolute -top-6 -left-6 bg-white px-4 py-2 rounded-full shadow-xl border border-purple-200 animate-fade-in-up animation-delay-200">
+                  <span className="text-sm font-bold text-purple-600">🎯 Smart Suggestions</span>
+                </div>
+                <div className="absolute -bottom-6 -right-6 bg-white px-4 py-2 rounded-full shadow-xl border border-pink-200 animate-fade-in-up animation-delay-400">
+                  <span className="text-sm font-bold text-pink-600">⚡ Instant Checkout</span>
+                </div>
+              </div>
+
+              {/* Features List */}
+              <div className="space-y-6 order-1 lg:order-2">
+                <div className="flex gap-4 items-start group animate-fade-in-up animation-delay-200">
+                  <div className="w-14 h-14 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0 shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
+                    🛒
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">Natural Language Shopping</h3>
+                    <p className="text-gray-600 leading-relaxed">Simply chat with our AI in plain English. Tell it what you need, and it instantly finds the perfect products for you.</p>
+                  </div>
+                </div>
+
+                <div className="flex gap-4 items-start group animate-fade-in-up animation-delay-400">
+                  <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0 shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
+                    ⚡
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">One-Click Cart Management</h3>
+                    <p className="text-gray-600 leading-relaxed">AI automatically adds items to your cart, compares prices, and applies the best deals—all in seconds.</p>
+                  </div>
+                </div>
+
+                <div className="flex gap-4 items-start group animate-fade-in-up animation-delay-600">
+                  <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0 shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
+                    🔄
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">Smart Subscription Setup</h3>
+                    <p className="text-gray-600 leading-relaxed">AI suggests personalized subscriptions based on your shopping patterns, saving you time and 15% on recurring items.</p>
+                  </div>
+                </div>
+
+                <div className="flex gap-4 items-start group animate-fade-in-up animation-delay-800">
+                  <div className="w-14 h-14 bg-gradient-to-br from-amber-500 to-orange-500 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0 shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
+                    📦
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">Seamless Checkout</h3>
+                    <p className="text-gray-600 leading-relaxed">Complete your purchase with a single command. The AI handles payment processing and delivery scheduling instantly.</p>
+                  </div>
+                </div>
+
+                <div className="flex gap-4 items-start group animate-fade-in-up animation-delay-1000">
+                  <div className="w-14 h-14 bg-gradient-to-br from-rose-500 to-red-500 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0 shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
+                    🧠
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">Learns Your Preferences</h3>
+                    <p className="text-gray-600 leading-relaxed">The more you shop, the smarter it gets. AI remembers your favorites and dietary needs for personalized recommendations.</p>
+                  </div>
+                </div>
+
+                {/* CTA Button */}
+                <div className="pt-6 animate-fade-in-up animation-delay-1200">
+                  <Link href="/products">
+                    <Button className="w-full sm:w-auto text-lg px-10 py-5 bg-gradient-to-r from-purple-600 via-pink-600 to-rose-600 hover:from-purple-700 hover:via-pink-700 hover:to-rose-700 shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300">
+                      Try AI Shopping Now
+                      <span className="ml-2">✨</span>
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Background Decorations */}
+        <div className="absolute top-20 right-10 w-64 h-64 bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
+        <div className="absolute bottom-20 left-10 w-64 h-64 bg-pink-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
+      </section>
+
       {/* Stats Section */}
       <section className="py-16 bg-gradient-to-r from-emerald-600 to-teal-600 text-white">
         <div className="container mx-auto px-4">

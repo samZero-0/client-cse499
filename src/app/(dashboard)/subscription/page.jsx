@@ -89,14 +89,22 @@ export default function SubscriptionPage() {
   };
 
   // Save Changes to Backend
+ // Save Changes to Backend
   const handleSave = async (newItems) => {
     try {
+        // FIX: Include 'price' and 'name' because the Mongoose Schema requires them!
         const backendItems = newItems.map(item => ({
-            product: item._id, // Send ID so backend can link it
-            quantity: item.quantity
+            product: item._id, 
+            name: item.name,      // Added
+            quantity: item.quantity,
+            price: item.price     // Added (Crucial fix)
         }));
 
         const payload = { items: backendItems, frequency };
+        
+        // Debugging: Check console to ensure price is now present
+        console.log("Sending Payload:", payload);
+
         await axios.post('/subscription', payload);
         
         // Re-fetch to ensure we have the cleanest data (and images) from DB
@@ -104,7 +112,7 @@ export default function SubscriptionPage() {
         toast.success('Subscription updated successfully! ✅');
     } catch (error) {
         toast.error('Error saving subscription. Please try again.');
-        console.error(error);
+        console.error("Save Error:", error.response?.data?.message || error.message);
     }
   };
 

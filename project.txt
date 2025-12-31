@@ -1,0 +1,879 @@
+\documentclass[12pt]{report}
+\usepackage[english]{babel}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{geometry}
+\usepackage{titlesec}
+\usepackage{setspace}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{amsmath}
+\usepackage{listings}
+\usepackage{xcolor}
+
+\usepackage{lmodern} % Or your chosen font package
+
+% Make ALL sections use the same font as body text
+\allsectionsfont{\normalfont}
+
+
+% Page margins
+\geometry{a4paper, left=1in, right=1in, top=1in, bottom=1in}
+
+
+
+% Line spacing
+\onehalfspacing
+
+% Chapter formatting
+\titleformat{\chapter}[display]
+{\normalfont\huge\bfseries}{\chaptertitlename\ \thechapter}{20pt}{\Huge}
+
+\begin{document}
+
+% Title Page
+\begin{titlepage}
+\begin{center}
+    \vspace*{1cm}
+    
+    \begin{figure}[H]
+    \centering
+     \includegraphics[scale=.7]{media/image1.jpeg}
+    \end{figure}
+    
+    \textbf{\Large An Undergraduate Internship Project on PantryPal: An Intelligent AI Driven Grocery \& Subscription Agent
+}\\
+    \vspace{.5cm}
+    By\\
+    \vspace{.5cm}
+    \textbf{\large Najmul Ahsan Shuvo}\\
+    \vspace{.5cm}
+    Student ID: \textbf{1730863}\\
+    \vspace{1cm}
+    \textbf{\large Autumn, 2025}\\
+    \vspace{1cm}
+    Supervisor: \\
+    \vspace{.2cm}
+    \textbf{\large }\\
+    \vspace{.2cm}
+    \textbf{Lecturer B }\\
+    \vspace{.2cm}
+    Department of Computer Science \& Engineering\\
+    \vspace{.2cm}
+    Independent University, Bangladesh\\
+    \vspace{1cm}
+    \textbf{\large\ December 31, 2025}
+    \vfill
+    \textbf{Dissertation submitted in partial fulfillment for the degree of Bachelor of Science in Computer Science}\\
+    \vspace{.5cm}
+    \textbf{Department of Computer Science \& Engineering}\\
+    \vspace{.5cm}
+    \textbf{\large Independent University, Bangladesh}
+\end{center}
+\end{titlepage}
+
+% Attestation Page
+
+\pagenumbering{roman} % Start with roman numerals for front matter
+
+\chapter*{Attestation}
+\addcontentsline{toc}{chapter}{Attestation}
+
+I, Najmul Ahsan Shuvo, ID: 1730863 hereby declare, that the report titled "An Undergraduate Internship Project on PantryPal:
+An Intelligent AI Driven Grocery \& Subscription
+Agent" for "\textbf{}" submitted in partial fulfillment of the requirement for the Degree of Computer Science is the result of my research work. I am also stating that the work was undertaken as a student in the universities.
+
+I would like to express my thankfulness for the guidance of my supervisor,Azwad Abid , who has always helped and advised me throughout the period. I also declare that the work being done is a personal view and that the objects were made from all that I have learnt and knowledge I got during my internship.
+
+The report also properly cites and credits all sources used for further query or question about this report, contacting my supervisor in the internship setting,  at \textbf{} through the email address.
+
+\vspace{5cm}
+
+% \begin{figure}
+%     \centering
+%     \includegraphics[width=0.75\linewidth]{add sign.jpg}
+    
+%     \label{fig:placeholder}
+% \end{figure}
+
+% Letter of Transmittal
+\chapter*{Letter of Transmittal}
+\addcontentsline{toc}{chapter}{Letter of Transmittal}
+
+
+
+
+\begin{document}
+
+
+\begin{flushleft}
+
+\end{flushleft}
+
+
+
+\noindent
+\textbf{To}\\
+\\
+Lecturer B\\
+Department of Computer Science and Engineering\\
+School of Engineering and Computer Science\\
+Independent University, Bangladesh\\[1em]
+\noindent
+\textbf{Subject: Submission of Internship Report for Graduation Completion}\\
+
+\noindent
+Dear Sir,\\[0.5em]
+
+Greetings, Sir With great pleasure, I present my Internship Report as part of the Bachelor of Science in Computer Science program. The report is based on my three-month internship at  LTD, located in ,, under the supervision of . I am deeply grateful for your valuable guidance and support throughout this period. This report highlights the key experiences and insights I gained during my internship, and I am confident that it fulfills all requirements for the partial completion of my degree. Thank you for your time, supervision, and encouragement, it has been a truly rewarding learning experience under your mentorship.\\
+\\\\
+Yours sincerely,\\
+\textbf{Najmul Ahsan Shuvo}\\
+ID: 1730863\\
+
+Department of Computer Science \& Engineering\\
+Independent University, Bangladesh
+
+
+
+
+
+
+
+
+% Evaluation Committee
+% \chapter*{Evaluation Committee}
+% \addcontentsline{toc}{chapter}{Evaluation Committee}
+
+% % Your committee members list
+% \begin{center}
+   
+    
+%     \vspace{0.5cm}
+    
+   
+    
+%     \includegraphics[width=0.95\linewidth]{signature.PNG}
+    
+%     \vspace{0.3cm}
+    
+  
+    
+%     \vspace{0.5cm}
+    
+  
+% \end{center}
+% Abstract
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+
+This internship project report focuses on the development and implementation of an intelligent retail agent named "PantryPal," designed to revolutionize the digital grocery sector by mitigating high cognitive load and operational inefficiencies. The global retail sector is currently undergoing a fundamental paradigm shift, transitioning from static, catalog-based interaction models to dynamic, autonomous, and agentic experiences driven by Artificial Intelligence. While e-commerce has matured significantly, the online grocery sector remains plagued by friction, creating a disparity between user intent and system requirements that manifests as staggering cart abandonment rates and profound food waste. PantryPal represents a theoretical yet technologically viable architecture for an Intelligent AI-Driven Grocery \& Subscription Agent designed to resolve these systemic failures. By synthesizing state-of-the-art advancements in Large Language Models (LLMs), deterministic low-latency hardware (Groq LPUs), and vector-based semantic retrieval, the system proposes a new operating system for the modern kitchen—moving beyond mere transaction facilitation to proactive household management. The project involves comprehensive data integration from the Instacart Market Basket Analysis dataset, the development of a "Zero Trust" security architecture to defend against prompt injection, and the implementation of a conversational interface that reduces the cognitive tax on consumers. Despite challenges such as data integration complexities and the need for self-healing code to ensure interface reliability, the developed agent demonstrates significant potential in improving healthcare accessibility through better nutrition, optimizing supply chain forecasting, and promoting sustainable consumption. This work contributes to the emerging field of agentic AI, providing a blueprint for the future of autonomous commerce.
+\\
+
+\textbf{\textit{Keywords:}} Agentic AI, Large Language Models, Groq LPU, Vector Search, Cognitive Load Theory, Supply Chain Optimization, Food Waste Reduction, Conversational Commerce, Prompt Injection, Zero Trust Architecture.
+
+
+% Table of Contents
+\tableofcontents
+
+% List of Figures
+\listoffigures
+\addcontentsline{toc}{chapter}{List of Figures}
+
+% Chapters
+\mainmatter
+
+% Chapter 1: Introduction
+
+
+
+\chapter{Introduction}
+\pagenumbering{arabic}
+\section{Overview/Background of the Work}
+
+The global retail sector is currently experiencing a seismic shift, moving away from the static, catalog-based interaction models that defined the Web 2.0 era toward dynamic, autonomous, and agentic experiences driven by Artificial Intelligence (AI). While general e-commerce has matured significantly over the past two decades, the online grocery sector remains plagued by friction, high cognitive load, and operational inefficiencies. These inefficiencies manifest most visibly as staggering cart abandonment rates and profound levels of food waste.
+
+“PantryPal,” the subject of this comprehensive internship project, represents a theoretical yet technologically viable architecture for an Intelligent AI-Driven Grocery & Subscription Agent designed to resolve these systemic failures. By synthesizing state-of-the-art advancements in Large Language Models (LLMs), deterministic low-latency hardware, and vector-based semantic retrieval, PantryPal proposes a new operating system for the modern kitchen—one that moves beyond mere transaction facilitation to proactive household management.
+
+Grocery shopping is distinct from other e-commerce categories due to its high frequency, high basket volume, and the complexity of its decision matrix. Unlike buying a television or a pair of shoes—discretionary purchases made infrequently—grocery shopping is a recurring, non-discretionary necessity involving the selection of 30 to 50 distinct items per session. The current digital interface for this task, the Graphical User Interface (GUI), was designed for the low-velocity retrieval of information, not the high-velocity management of household inventory. The “search-scroll-filter-click” loop required to fill a digital cart imposes a significant cognitive tax on the consumer, creating a disparity between the user’s intent (“I want to cook dinner for the week”) and the system’s requirements (“Find 20 individual ingredients, check stock, and compare prices”).
+
+This friction is not merely an inconvenience; it is an economic hemorrhage. Industry data shows that the average online grocery cart abandonment rate is extremely high, with mobile users exhibiting even higher failure rates. This suggests that the majority of digital shopping sessions end without completion, driven by complex navigation, decision paralysis, and the sheer effort required to finalize a transaction. A large portion of users abandon carts due to unexpected costs or checkout complexity, while others explicitly cite long and complicated checkout processes as the primary reason for leaving.
+
+Furthermore, the disconnect between purchasing and consumption contributes to a global crisis of food waste, where households discard significant portions of their purchased food due to poor planning and spoilage, while retailers struggle to accurately forecast demand for perishable goods.
+
+The emergence of Agentic AI—systems capable of perception, reasoning, planning, and tool execution—offers a solution to these entrenched problems. Unlike traditional chatbots, which are reactive and limited to scripted responses, AI agents like PantryPal can autonomously navigate complex environments, manage state over time, and execute multi-step workflows to achieve high-level goals. Powered by Large Language Models (LLMs) that act as reasoning engines, these agents can interpret natural language with near-human nuance, allowing users to interact with retailers through the most intuitive interface available: conversation.
+
+However, deploying such agents requires a rigorous technical architecture. It demands inference speeds that closely mirror human reaction times to preserve conversational flow—requirements that traditional GPU-based infrastructures often struggle to meet but which newer specialized hardware architectures are designed to support. It also requires robust semantic memory to understand and retain user preferences without constant repetition, enabled through vector-based databases. Finally, it necessitates a strong security posture capable of defending against emerging threats such as prompt injection, where malicious inputs could manipulate agent behavior through corrupted or adversarial data.
+
+\section{Objectives}
+
+The primary objective of this project is to design, develop, and simulate the architecture of PantryPal, an intelligent grocery agent that effectively automates the management of household inventory and procurement. The specific objectives include:
+
+\textbf{Synthesize Current Literature:} Review and analyze academic and industrial research regarding Conversational AI, Cognitive Load Theory, and Food Waste to establish a robust theoretical foundation for the agent. This involves understanding the psychological barriers to online grocery adoption and how agentic interfaces can mitigate them.
+
+
+\textbf{Define the Cognitive Architecture: } Detail the specific technical components—from Groq LPUs for inference to MongoDB Vector Search for memory—required to build a responsive, intelligent agent that operates within a deterministic latency threshold. This includes selecting appropriate LLMs (e.g., Kimi k2) that balance performance with cost.
+
+\textbf{Analyze the User Experience}:  Map the paradigm shift from "searching" for products to "managing" outcomes through features like predictive subscriptions, automated inventory tracking, and conversational discovery. The goal is to move the user from a high-friction "search-scroll-filter" loop to a low-friction "intent-action" loop.
+
+\textbf{Evaluate Economic Implications}:  Quantify the potential impact of the PantryPal system on critical economic metrics such as cart abandonment rates, average order value (AOV), and supply chain efficiency. By reducing the friction of purchasing, the agent aims to recover a portion of the \$18 billion lost annually to spoilage and inefficiencies.
+
+\textbf{Address Security and Governance}: Explore and mitigate the critical risks associated with deploying autonomous agents in retail, specifically focusing on the threat landscape of prompt injection and the necessity for data privacy and "Zero Trust" architectures. This involves implementing guardrails that prevent the agent from performing unauthorized actions or leaking sensitive user data.8
+
+By accomplishing these objectives, PantryPal serves not just as a shopping tool, but as a comprehensive operating system for the modern kitchen, aligning economic savings for the consumer with operational efficiency for the retailer.
+
+\section{Scopes}
+
+The scope of the PantryPal project encompasses the end-to-end development lifecycle of an agentic AI system tailored for the grocery domain. Key areas of development and analysis include:
+
+
+\textbf{Adapted for Retail:}
+ This scope is adapted in PantryPal as \emph{Pain Point Analysis and Needs Assessment}. The system processes natural language descriptions of user needs (e.g., ``I need a high-protein dinner that is quick to cook'') and maps them to relevant product inventories and recipes. This involves transforming traditional symptom-checking logic into dietary requirement and preference analysis.
+
+\textbf{Product Discovery :}
+This component focuses on developing a sophisticated recommendation engine that matches user dietary profiles and immediate needs with appropriate products. It applies advanced filtering based on price, nutritional value, and stock availability, effectively translating user hunger or shopping intent into actionable purchase recommendations.
+
+\textbf{Multi-Criteria Search Functionality:}
+Users can search for products using multiple parameters such as dietary restrictions (e.g., Keto, Vegan), price ranges, brand preferences, and sustainability indicators. The system supports both structured queries and natural language prompts, enabling requests such as ``Find me a sustainable coffee brand under \$15''.
+
+\textbf{Data Management and Integration:}
+This scope involves building robust data pipelines for ingesting and synchronizing heterogeneous datasets, including product catalogs, user purchase histories, and nutritional databases. The system ensures data accuracy, consistency, and timely updates to support reliable recommendations and planning.
+
+\textbf{User Experience and Interface Design:}
+The project includes designing an intuitive conversational interface that guides users through meal planning and purchasing workflows. This approach reduces cognitive load and delivers a concierge-like experience, with future extensibility to multi-modal inputs such as voice and image recognition.
+
+\textbf{Privacy and Security Measures:}
+The system implements strict security mechanisms to protect sensitive user information, including dietary preferences and payment data. It also addresses Large Language Model–specific threats such as prompt injection and jailbreaking through verification-based and zero-trust execution principles.
+
+\textbf{Performance Monitoring and Analytics:}
+This component incorporates monitoring and analytics tools to track system responsiveness, inference latency, operational cost, and recommendation accuracy. Key performance indicators include Time to First Token (TTFT) and overall request round-trip time, ensuring both usability and economic feasibility.
+
+
+The project focuses specifically on the technical and architectural feasibility of such an agent, simulating its deployment within a modern cloud infrastructure using state-of-the-art AI tools like Groq and MongoDB Atlas.
+
+
+% Chapter 2: Literature Review
+\chapter{Literature Review}
+
+\section{Relationship with Undergraduate Studies}
+
+The design and development of PantryPal required the synthesis of knowledge from various core courses within the Computer Science curriculum at Independent University, Bangladesh (IUB). The theoretical and practical foundations laid by these courses were instrumental in addressing the complex engineering challenges of this project.
+
+
+\textbf{CSE 303: Database Management:}
+The design of the ``Digital Pantry'' and the inventory tracking system relied heavily on the principles of database schema design, normalization, and query optimization taught in this course. The project extends these concepts to include vector databases for semantic retrieval, representing a modern evolution of traditional relational data models.
+
+\textbf{CSE 309: Web Applications and Internet:}
+This course provided the foundational knowledge required to build the backend infrastructure of the agent. Concepts such as RESTful APIs, server-side programming using Flask and Python, and client–server architecture were applied to develop the communication layer between the user interface and the AI models, enabling API endpoints for chat handling and cart operations.
+
+\textbf{CSE 307: System Analysis and Design:}
+The requirement gathering, feasibility analysis, and system architecture design of PantryPal were carried out using methodologies learned in this course. Techniques such as Rich Pictures and Data Flow Diagrams were employed to visualize complex agent interactions and ensure comprehensive stakeholder alignment.
+
+\textbf{CSE 211: Algorithms:}
+The performance and efficiency of PantryPal’s search and recommendation mechanisms are grounded in algorithmic complexity analysis and optimization techniques covered in this course. The implementation of product search within vector spaces directly applies these algorithmic principles.
+
+R. Sharma and A. Gupta developed 'SmartPantry Manager', a system designed to mitigate household food spoilage through intelligent inventory tracking. Their approach prioritized a First-In-First-Out (FIFO) consumption logic, which dynamically reordered recipes based on the expiration dates of available ingredients. The system demonstrated that prioritizing aging inventory could reduce household food waste by approximately 20\%, validating the necessity of dynamic expiry tracking in modern smart kitchen applications \cite{sharma2024}.
+
+
+
+J. Li and Y. Chen explored the intersection of artificial intelligence and behavioral psychology in waste management. Their research highlighted the efficacy of "behavioral nudges," specifically the visualization of financial loss associated with discarded food, to motivate consumer behavior change. They found that users who were presented with a dashboard showing the monetary value of wasted items were 15\% more likely to adopt sustainable consumption habits compared to those receiving generic alerts \cite{li2024}.
+
+
+
+M. Rahman and T. Islam focused on the technical architecture of waste reduction systems, implementing a full-stack solution using the MERN (MongoDB, Express, React, Node.js) stack. Their work on the 'Smart Food Waste Management System' demonstrated the scalability and real-time performance of JavaScript-based architectures for handling concurrent inventory updates. This study provides a strong architectural precedent for using non-relational databases to manage the high-velocity data inherent in grocery tracking \cite{rahman2025}.
+
+
+
+S. Kumar and V. Singh addressed the "cold start" problem in meal planning by developing a recipe recommendation engine based on ingredient availability. Utilizing Jaccard similarity coefficients, their algorithm matched user inventory lists against a recipe database to suggest meals that maximized current stock usage. While effective for strict keyword matching, their findings suggested that semantic understanding was necessary to handle ingredient substitutions effectively \cite{kumar2024}.
+
+
+
+L. Van der Meer and D. Kline expanded the scope of grocery recommendation systems beyond user preference to include environmental sustainability. They introduced a multi-objective optimization algorithm that balanced user taste profiles with the carbon footprint of products. Their results indicated that users were willing to accept "greener" substitutes if the system provided transparent reasoning, a concept that aligns with the growing demand for ethical AI in retail \cite{vandermeer2024}.
+
+
+
+J. Park and H. Kim investigated hardware-centric solutions for inventory management, proposing a smart refrigerator equipped with internal cameras and Convolutional Neural Networks (CNNs). Their system achieved high accuracy in object detection for common fruits and vegetables. However, they noted significant barriers to adoption due to high hardware costs and privacy concerns, suggesting that software-based inference models might offer a more accessible alternative for mass-market adoption \cite{park2021}.
+
+
+
+M. Mancini and L. Rossi integrated IoT technology into the kitchen environment, utilizing connected scales to automate the tracking of food consumption. By linking physical weight data with a mobile application, they were able to update inventory levels in real-time without manual user input. Their study emphasized that minimizing manual data entry is the single most critical factor in sustaining long-term user engagement with food management apps \cite{mancini2023}.
+
+
+
+N. Al-Fayed developed a predictive grocery ordering system that analyzed historical purchase data to forecast household needs. By calculating individual consumption intervals for staples like milk and eggs, the system could autonomously populate shopping carts. The study showed that predictive replenishment significantly reduced the cognitive load on consumers, transforming grocery shopping from a proactive chore into a managed service \cite{alfayed2025}.
+
+
+
+W. Zhang and Q. Liu applied unsupervised machine learning techniques to personalize the shopping experience. Using K-Means clustering, they grouped users based on purchasing behaviors to recommend products popular within similar demographics. While this method improved recommendation relevance by 18\%, the authors acknowledged the limitations of static clustering in capturing immediate, context-specific user intents compared to more dynamic conversational models \cite{zhang2022}.
+
+
+
+B. Davis and E. Thompson examined the impact of Conversational AI on the digital retail experience. Their research indicated that natural language interfaces could handle up to 80\% of routine shopping interactions, such as searching for products or checking order status. They concluded that replacing complex graphical user interfaces (GUIs) with chat-based agents significantly reduced the "decision fatigue" associated with large e-commerce catalogs \cite{davis2024}.
+
+
+
+
+\section{Related Works}
+
+The digital grocery ecosystem can be analyzed through cognitive psychology, consumer behavior, and technological capability. Cognitive Load Theory explains how excessive interface complexity overwhelms users’ limited working memory, particularly in grocery shopping, which involves frequent, high-volume, and multi-item decision-making. Existing platforms amplify extraneous cognitive load through deep category hierarchies and prolonged checkout processes, leading to high cart abandonment. PantryPal mitigates this friction by transferring navigation and decision-making responsibilities from the user to an intelligent agent, thereby reducing unnecessary cognitive effort.
+
+The evolution from Graphical User Interfaces to Conversational User Interfaces marks a shift from system-driven interaction to intent-driven communication. Unlike GUIs, which require users to adapt to rigid structures, conversational interfaces allow natural language expression of needs. Early voice commerce systems were constrained by limited language understanding, but recent advances in Large Language Models enable contextual reasoning and nuanced intent interpretation. Conversational shopping has been shown to improve accessibility and align well with habitual grocery purchasing patterns, fostering repeat behavior and brand loyalty.
+
+Food waste remains a critical inefficiency across both retail and household levels, largely due to the disconnect between purchasing and consumption. Consumers often lack tools for inventory awareness and meal planning, leading to spoilage. Intelligent nudging, such as recipe suggestions based on existing pantry items, and subscription-based purchasing models help reduce waste by improving consumption planning and demand predictability.
+
+Industry trends demonstrate growing validation of AI-driven grocery experiences, including conversational search, mission-based shopping, and sustainability-focused retail models. PantryPal integrates these fragmented approaches into a unified system, positioning a persistent AI agent as an operating system for the kitchen that manages discovery, planning, purchasing, and consumption holistically.
+
+% \textbf{L. Liu et al.} developed a hybrid deep learning model for symptom checking that combined Convolutional Neural Networks (CNNs) for feature extraction from text related symptoms and Long Short Term Memory (LSTM) networks for sequential information processing. Their model, trained on a dataset of over 600,000 historical patient cases, achieved an accuracy of 83.7\% in predicting the correct disease of department, significantly outperforming traditional systems following old rules. This work reflects the efficiency of DL in understanding complex medical descriptions from patients [4].
+
+% \textbf{T. Kumar et al.} focused on a knowledge-based doctor recommendation system that used semantic similarity measures to match patient queries with doctor profiles. Their system incorporated factors such as specialization, experience, patient reviews, and geographical proximity. By employing a weighted scoring algorithm, they were able to rank doctors effectively, with user studies indicating a 35\% improvement in recommendation satisfaction compared to simple keyword-based search systems [5].
+
+% \textbf{E. Schmidt et al.} proposed a predictive model for healthcare accessibility using socioeconomic and geographic features. Their study found that features like population density, average income levels, and density of healthcare facilities in a region were highly predictive of healthcare outcomes. They identified novel features such as public transportation accessibility and local language prevalence as significant factors, though data availability for some regions remained a challenge throughout the study [6].
+
+% \textbf{Pham et al.} offered a systematic, model emphasized approach for structuring the prediction problem in healthcare chatbots. Prioritizing the lack of standardization in medical knowledge representation, the authors architectural choices through illustration and challenges faced by developers, such as handling symptom synonyms and varying symptom severities for similar cases. Their work provides a significantly important guide for future research in considering chatbot development for healthcare [7].
+
+% \textbf{K. Patel et al.} created a flexible, data driven algorithm using collaborative filtering and filtering based on content to enhance doctor and patient matching. Tested on a dataset from a multiple hospital network and sources, their hybrid approach improved the relevance of top recommendations by over 40\%, as measured by patient follow-through rates on appointments. This provides a practical and efficient model for integrating into healthcare platforms to improve user experience accordingly [8].
+
+% \textbf{L. Liu et al.} researched the use of transfer learning for medical chatbots extensively in low-resource languages. By first implementing a model on training using a large English medical dataset following fine-tuning it with a smaller Bengali dataset, they achieved notable performance, reducing the data requirements for training an effective medical chatbot by 60\% while maintaining a 78\% accuracy rate in symptom understanding. This suggests transfer learning is a viable method for rapidly deploying healthcare AI in linguistically diverse countries [9].
+
+% \textbf{E. Zhang et al.} brought a proposal of a predictive model for estimating patient demand for specific medical specializations using temporary data and online search trends. Analyzing features across various time series and public data, their model could predict weekly demand for cardiologists and dermatologists with an R-squared value of 0.89, enabling better resource allocation for healthcare providers [10].
+
+% \textbf{Yang et al.} targeted to build a model for predicting patient no-show rates for appointments based on historical data. Using multiple regression analysis, the dependent variable was the no-show rate, while independent variables included the time of appointment, patient history, and day of the week. The analysis producted a determination coefficient r-square of 0.79, which is statistically significant (p < .01), providing actionable insights for reducing operational inefficiencies in clinics [11].
+
+% \textbf{S. Watanabe et al.} explored factors influencing patient's satisfaction with telemedicine platforms. Their 12-month longitudinal study found that satisfaction was strongly linked to interface simplicity and the speed of receiving recommendations, while the achieved accuracy of the symptom checker was predicted by the clarity of its explanations and disclaimers. These findings suggest the need for designing chatbots that are not only accurate but also transparent and easy to use [12].
+
+% \textbf{C. Fischer et al.} made a formula using historical appointment booking data to predict peak load times for a clinic's chatbot service. The model achieved 92\% effectiveness in predicting high-traffic periods, allowing for dynamic scaling of server resources to maintain performance and user satisfaction during demand spikes [13].
+
+% Chapter 3: Project Management & Financing
+\chapter{Project Management \& Financing}
+
+\section{Work Breakdown Structure}
+
+A Work Breakdown Structure (WBS) is a hierarchical decomposition of the total scope of work to be carried out by the project team. It provides an organized and detailed description of all project deliverables and activities, breaking the complex project into smaller, more manageable components. For the PantryPal project, the WBS aims to assist in planning, organizing, and controlling the development process by clearly defining tasks, facilitating resource allocation, and enabling effective progress tracking.
+
+% [IMAGE: Work Breakdown Structure Diagram]
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=7in, height=4in]{pics/wbs.jpg}
+    \caption{Work Breakdown structure Diagram}
+    \label{fig:wbs}
+\end{figure}
+
+\section{Process/Activity wise Time Distribution}
+
+The successful and timely completion of the PantryPal project is contingent upon the effective allocation of time to each sequential task and process. Identifying the critical path—the longest sequence of tasks that must be completed on time for the entire project to finish on schedule—is paramount. Tasks on this path, such as the development of the core NLP engine and the integration of the vector database, are interdependent; any delay in one directly impacts the project's final deadline.
+
+
+% [IMAGE: Process/Activity wise Time Distribution Diagram]
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=7.2in, height=5.5in]{pics/gantt.jpg}
+    \caption{Process/Activity wise Time Distribution Diagram}
+    \label{fig:time_distribution}
+\end{figure}
+
+\section{Gantt Chart}
+
+The planning and scheduling phase for the PantryPal project was conducted using a Gantt chart, a vital tool in modern project management for visualizing project timelines, task dependencies, and progress. The chart provided a clear overview of all activities, their start and end dates, and the team members responsible, ensuring alignment and accountability.
+The Gantt chart highlights the parallel nature of the Data Engineering and Frontend Development phases, which converge during the Integration phase. It also visually flags the critical dependency of the "Vector Search Implementation" on the completion of "Data Collection & Cleaning."
+
+\section{Process/Activity wise Resource Allocation}
+
+The successful execution of the PantryPal project requires a deliberate and strategic allocation of human, technological, and financial resources across its development lifecycle.
+
+\subsubsection{Planning and Research Phase}
+This phase involved the Project Manager and a Domain Expert in grocery retail to conduct requirement gathering and problem scoping. Emphasis was placed on understanding user pain points, particularly the cold-start problem in meal planning. Project management and collaboration tools such as Jira were used for task tracking, while Miro supported system ideation and architectural whiteboarding.
+
+\subsubsection{Design and Architecture Phase}
+During this phase, a Systems Architect and an AI Researcher collaborated to design the overall system architecture. Key activities included technology stack selection, such as evaluating specialized inference hardware versus traditional GPU-based solutions, and designing the database schema. Resources included platform documentation and cloud-based planning tools for scalable database deployment.
+
+\subsubsection{Development Phase}
+The development phase was the most resource-intensive stage of the project. Backend development was carried out by Python developers using Flask to implement the web server and API endpoints. AI engineers focused on integrating language model orchestration frameworks, prompt engineering, and vector embedding generation for semantic retrieval. Frontend developers used React to build the conversational user interface. Compute resources included high-speed inference APIs for real-time responses and cloud-based GPU instances for offline embedding generation.
+
+\subsubsection{Testing and Quality Assurance Phase}
+Quality Assurance engineers and Security Analysts were responsible for validating system correctness, robustness, and security. This phase included unit testing, integration testing, and adversarial testing such as red-teaming exercises to identify vulnerabilities like prompt injection. Automated testing frameworks and security scanning tools were extensively used to ensure reliability and safety.
+
+\subsubsection{Deployment and Maintenance Phase}
+Deployment was managed by DevOps engineers who provisioned and maintained the production environment using cloud infrastructure. Post-deployment, resources were allocated for continuous monitoring and observability through performance dashboards that tracked inference latency, error rates, and system health to ensure long-term stability and scalability.
+
+
+
+\section{Estimated Costing}
+
+Developing an agentic AI system involves significant costs related to API usage, cloud infrastructure, and personnel. The following estimate is based on current market rates for generative AI development and cloud services.
+
+\begin{table}[h]
+\centering
+\caption{Estimated Cost Breakdown for PantryPal Project}
+\begin{tabular}{|p{3.5cm}|p{7.5cm}|p{3cm}|}
+\hline
+\textbf{Cost Component} & \textbf{Description} & \textbf{Estimated Cost (USD)} \\
+\hline
+Personnel & Salaries for AI Engineers, Backend and Frontend Developers, and QA engineers over a three-month period, calculated using internship and junior-level rates. & \$45{,}000 \\
+\hline
+Inference API (Groq) & Costs associated with running large language models for testing and early user interactions, assuming high token usage during development and validation. & \$2{,}000 \\
+\hline
+Database (MongoDB) & MongoDB Atlas dedicated tier to support vector search functionality, including storage and input/output operations. & \$500 \\
+\hline
+Cloud Infrastructure & Cloud hosting for application servers, frontend deployment, and static asset storage using AWS or GCP services. & \$1{,}500 \\
+\hline
+Data Acquisition & Licensing costs for proprietary grocery datasets and nutritional information APIs, represented as a simulated expense. & \$1{,}000 \\
+\hline
+Tools and Software & Subscription costs for development and monitoring tools, including GitHub Copilot, Jira, observability platforms, and security auditing utilities. & \$500 \\
+\hline
+Contingency & A 10\% contingency buffer to accommodate unforeseen expenses such as increased token usage or additional cloud resources. & \$5{,}050 \\
+\hline
+\textbf{Total Estimated Cost} &  & \textbf{\$55{,}550} \\
+\hline
+\end{tabular}
+\end{table}
+
+\noindent\textit{Note: This cost estimation reflects a theoretical commercial deployment scenario. As an internship project, actual expenditures were minimal due to reliance on free service tiers and student-accessible resources.}
+
+
+% Chapter 4: Methodology
+\chapter{Methodology}
+
+\section{Overview}
+
+The development of the PantryPal grocery  system involved a comprehensive methodology that integrated multiple data sources, system analysis and natural language processing capabilities. The system was designed to analyze user intent (symptoms or hunger), provide primary assessments (dietary needs), and recommend appropriate solutions (products ). This chapter details the data collection process, preprocessing techniques, and system implementation that formed the foundation of the agent.
+
+
+\section{Data Sources}
+
+The PantryPal system integrates multiple data sources to ensure comprehensive coverage of grocery inventory, nutritional knowledge, and user interaction behavior.
+
+\subsubsection{Product Catalog and Taxonomy Data}
+To simulate a real-world grocery inventory, an open grocery market basket dataset was used. This dataset contains millions of anonymized orders from hundreds of thousands of users and includes relational files such as product identifiers, aisle classifications, and department-level categories. These datasets establish the foundational grocery taxonomy, enabling the system to correctly contextualize items within hierarchical structures, such as identifying organic bananas as belonging to the fresh fruit aisle under the produce department.
+
+
+
+
+\subsection{Architectural Design}
+The PantryPal system follows a client--server architecture implemented using the MERN stack (MongoDB, Express.js, React/Next.js, and Node.js). This design enforces a clear separation of concerns, where the frontend is responsible for user interaction and visualization, while the backend manages business logic, database operations, and AI integrations.
+
+\subsubsection{Frontend (Client)}
+ is developed using Next.js, a React-based framework, and styled with Tailwind CSS. It provides users with interfaces to browse products, manage shopping carts, and visualize pantry statistics through an interactive dashboard.
+ 
+ \begin{figure}[H]
+    \centering
+    \includegraphics[width=7in, height=4in]{pics/frontend code.png}
+    \caption{Next.Js Frontend code}
+    \label{fig:rich_picture}
+\end{figure}
+
+
+ \begin{figure}[H]
+    \centering
+    \includegraphics[width=7in, height=4in]{pics/frontend.png}
+    \caption{PantryPal Products page}
+    \label{fig:rich_picture}
+\end{figure}
+
+\subsubsection{Backend (Server)}
+The backend is implemented using Node.js and Express.js. It exposes RESTful API endpoints that handle authentication, order processing, inventory management, and communication with the AI chatbot.
+
+ \begin{figure}[H]
+    \centering
+    \includegraphics[width=7in, height=4in]{pics/backend.png}
+    \caption{Backend Routes}
+    \label{fig:rich_picture}
+\end{figure}
+
+
+\subsubsection{Database}
+MongoDB is used as the primary data store. Its document-oriented structure supports flexible schema design, which is particularly well-suited for handling nested entities such as user preferences, order items, and pantry records.
+
+ \begin{figure}[H]
+    \centering
+    \includegraphics[width=6in, height=2in]{pics/database.png}
+    \caption{MongoDB database collections}
+    \label{fig:rich_picture}
+\end{figure}
+
+\subsection{Database Schema and Data Modeling}
+To maintain data consistency and minimize redundancy within the NoSQL environment, a relational reference strategy was adopted.
+
+\subsubsection{Product Model}
+The Product model serves as the single source of truth for static product information, including name, image URL, price, and shelf-life duration.
+
+\subsubsection{PantryItem Model}
+Rather than duplicating product data, the PantryItem model stores a reference (ObjectId) to the Product model. This approach ensures consistency across the system while reducing storage redundancy.
+
+\subsubsection{User and Order Models}
+User and Order models manage authentication credentials, securely storing hashed passwords, and maintain a record of transaction history and order metadata.
+
+\subsection{Core Algorithms and Logic}
+
+\subsubsection{Smart Pantry Synchronization (Order-to-Pantry Algorithm)}
+The system automates inventory tracking by synchronizing completed orders with the digital pantry. When a user completes a checkout, the backend processes each cart item, retrieves the corresponding shelf-life value from the Product database, calculates the expiration date by adding the shelf-life duration to the current date, and inserts the item into the PantryItem collection with an initial freshness status.
+
+\subsubsection{Dynamic Expiry Tracking}
+Freshness status is calculated dynamically on the client side based on the remaining time until expiration. Items with more than seven days remaining are classified as fresh, those with three to seven days remaining are marked for near-term use, and items with three or fewer days remaining are flagged as expiring, enabling intuitive visual cues for users.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=6in, height=4in]{pics/tracking.png}
+    \caption{Dynamic Expiry Tracking}
+    \label{fig:rich_picture}
+\end{figure}
+
+\subsubsection{AI Chatbot Integration (Context-Aware NLP)}
+The PantryPal AI module enables natural language interaction using a high-performance language model accessed through the Groq SDK. Prior to inference, contextual information such as the product catalog and current cart state is injected into the system prompt. The model is instructed to return structured JSON responses for actionable intents, which are parsed by the backend to execute cart and inventory operations automatically.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=7in, height=4in]{pics/ai_code.png}
+    \caption{AI chatbot controller code}
+    \label{fig:rich_picture}
+\end{figure}
+
+\subsection{Implementation Strategy}
+
+\subsubsection{Data Seeding}
+To address missing metadata such as product images and shelf-life values, a data seeding script was developed. This script initializes the database with standardized product records, ensuring reliable operation of inventory and expiry logic.
+
+\subsubsection{Backend Development}
+JWT-based authentication was implemented to secure protected routes. The API design follows a modular structure, with dedicated endpoints for products, orders, and AI interactions. Robust error handling mechanisms were incorporated to ensure graceful failure handling without service interruption.
+
+\subsubsection{Frontend Integration}
+Client-side state management was handled using React hooks to support asynchronous data fetching and real-time UI updates. Responsive design principles were applied using Tailwind CSS grid and flex utilities. A reusable modal component was developed to display detailed order and pantry information without disrupting the user workflow.
+
+\subsection{Testing and Validation}
+System reliability was ensured through a combination of unit testing, integration testing, and edge-case validation. Individual API endpoints were tested independently, while end-to-end workflows were verified to confirm correct synchronization between checkout actions, database updates, and user interface changes. Special attention was given to handling invalid inputs, AI-generated errors, and products with edge-case shelf-life values.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=7in, height=4in]{pics/testing.png}
+    \caption{AI agent Testing: Add to cart Functionality}
+    \label{fig:rich_picture}
+\end{figure}
+
+
+% Chapter 5: Body of the Project
+\chapter{Body of the Project}
+
+The PantryPal project involved the end-to-end engineering of an intelligent retail agent. The work encompassed the entire software development lifecycle, from the initial conceptualization of the "Agentic Loop" to the practical implementation of vector search algorithms. The core task was to create a system that could "understand" grocery shopping not just as a keyword search, but as a semantic and logistical challenge. This required creating a "Digital Twin" of the user's kitchen, implementing predictive algorithms for replenishment, and designing a conversational interface that reduces cognitive load. The work also involved significant data engineering to clean and enrich the Instacart dataset, ensuring it was suitable for semantic retrieval.
+
+
+
+\section{Requirement Analysis}
+
+\subsection{Rich Picture}
+
+A Rich Picture was created to visualize the complex ecosystem of PantryPal. It illustrates the relationships between the User (Consumer), the Agent (PantryPal), the Retailer's Inventory System, and the External Data Sources (Recipes, Nutritional Info).
+
+% [IMAGE: Rich Picture]
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=7in, height=4in]{pics/rich picture.jpg}
+    \caption{Rich Picture}
+    \label{fig:rich_picture}
+\end{figure}
+
+\subsection{Functional Requirements}
+
+\textbf{Semantic Product Search:} The system must retrieve products based on conceptual descriptions (e.g., "spicy sauce") rather than exact keywords, utilizing Vector Search to handle imprecise user queries.
+
+\textbf{Contextual Meal Planning:} The agent must be able to generate recipes based on the user's existing inventory and dietary restrictions, checking the "Digital Pantry" before suggesting purchases.
+
+\textbf{Automated Replenishment:} The system must predict when high-velocity items (milk, eggs) are running low and suggest them for reordering via "Smart Nudges."
+
+\textbf{Cart Management:} The agent must autonomously add, remove, and modify items in the user's digital cart based on natural language commands.
+
+\textbf{Multi-Modal Input:} The system should support text input initially, with architectural support for voice and image input (pantry audits) to enhance accessibility.
+
+\subsection{Non-Functional Requirements}
+
+\textbf{Latency:} Responses must be generated in under 300ms to mimic human conversational speed, necessitating the use of Groq LPUs.
+
+\textbf{Reliability:} The system must handle "hallucinations" gracefully, ensuring that non-existent products are never added to the cart.
+
+\textbf{Scalability:} The architecture must support thousands of concurrent users, facilitated by the stateless nature of the LLM and the horizontal scalability of MongoDB Atlas.
+
+\textbf{Security:} The system must implement robust input sanitization to prevent prompt injection attacks and protect user privacy.
+
+\section{System Analysis}
+
+\subsection{Feasibility Analysis}
+
+The project is technically feasible due to the recent maturation of three key technologies: Generative AI (LLMs), Vector Databases, and specialized inference hardware (LPUs). Operationally, the system integrates into existing e-commerce workflows via standard APIs. Financially, while the initial development cost is significant, the potential reduction in cart abandonment (currently ~70\%) presents a massive ROI opportunity. The availability of open-source models like Llama 3 further reduces the barrier to entry.
+
+\subsection{Operational Feasibility}
+
+PantryPal is designed to augment, not replace, existing retail infrastructure. It operates as an overlay, interacting with the retailer's inventory management system (IMS) via APIs. This ensures smooth integration into daily operations. The system reduces the burden on customer support by handling routine queries ("Is this gluten-free?") and streamlines the checkout process, making it highly operationally viable. The system's ability to run 24/7 without fatigue offers a clear operational advantage over human support.
+
+
+\subsection{Financial Feasibility}
+
+The cost structure is dominated by inference costs (token usage). However, with Groq's competitive pricing (approximately \$0.59 per 1M input tokens for Llama 3 70B), the cost per interaction is manageable compared to the high value of a retained customer. The potential to increase Average Order Value (AOV) by 15--30\% through intelligent cross-selling and personalized bundles further cements the financial viability. The "Flex" pricing tiers of MongoDB Atlas also allow for cost-effective scaling.
+
+\subsection{Schedule Feasibility}
+
+The project timeline of 14 weeks was aggressive but achievable by leveraging managed services (GroqCloud, MongoDB Atlas) which removed the need for complex infrastructure setup. The use of pre-trained models (Llama 3) instead of training from scratch also significantly compressed the timeline, allowing the team to focus on application logic and integration rather than model training.
+
+\subsection{Problem Solution Analysis}
+
+The core problem is "Cognitive Load" in grocery shopping. Traditional GUIs force users to perform mental translation (Recipe -> Ingredients -> Search -> Filter). PantryPal solves this by performing the translation autonomously.
+
+
+\textbf{Problem:} User forgets frequent items. \textbf{Solution:} Predictive subscriptions utilizing historical consumption data.
+
+\textbf{Problem:} User is overwhelmed by choice. \textbf{Solution:} Curated recommendations based on dietary preferences stored in the Vector DB.
+
+\textbf{Problem:} Food waste. \textbf{Solution:} "Digital Pantry" tracks expiry dates and suggests recipes for aging items.
+
+
+\subsection{Effect and Constraints Analysis}
+
+The  project has both positive effects and potential limitations that must be considered for successful implementation and future scalability.
+
+
+
+\textbf{Positive Effects:} Reduced decision fatigue for users, increased revenue for retailers through higher conversion rates, and reduced food waste through better inventory management.
+
+\textbf{Constraints:} The system is dependent on the quality of the underlying product data; if the retailer's data is messy, the agent's performance degrades. The "Context Window" of the LLM also imposes a constraint on how much conversation history can be retained, requiring efficient context management strategies.
+
+
+
+\section{System Design and Implementation}
+
+\subsection{Architectural Overview}
+The system utilizes a \textbf{Client-Server Architecture} based on the \textbf{MERN Stack} (MongoDB, Express.js, React/Next.js, Node.js). The application is decoupled into two primary layers. The \textbf{Frontend (Client)} is built with Next.js, serving as the user interface for inventory visualization, order management, and AI interaction; it communicates with the server via RESTful APIs. The \textbf{Backend (Server)} is built with Node.js and Express.js, handling business logic, authentication, and database operations; it integrates with external AI services, specifically the Groq SDK, for advanced chatbot capabilities. This separation of concerns ensures modularity, simplifies maintenance, and facilitates independent scaling of the user interface and server-side components.
+
+\subsection{Microservices-Based AI Agent Architecture}
+To support the conversational AI shopping assistant, the system implements a dedicated \textbf{Microservices Architecture} that operates in parallel to the core MERN application. This design ensures modularity, scalability, and robust execution. The \textbf{Orchestrator Service}, implemented in Python/Flask, acts as the central brain of the agent. It is responsible for managing conversational state, routing user requests, validating all inputs to prevent injection attacks, and coordinating the workflow between all other specialized services. The \textbf{Inference Service} serves as the dedicated interface to Groq's Language Processing Units (LPUs) for running the Llama 3 model. This service handles the intricate construction of context-aware system prompts and the subsequent parsing of the LLM's structured JSON output into actionable commands. For long-term memory and semantic understanding, the \textbf{Memory Service} leverages MongoDB Atlas Vector Search. It stores high-dimensional embeddings of product descriptions and user preference profiles, enabling the semantic product search functionality that allows users to find items using conceptual queries like "spicy sauce" instead of exact keywords. Finally, a critical security and reliability component is the \textbf{Tool Executor}. This is a deterministic code module that performs safe, validated API calls to the core system (e.g., \texttt{add_to_cart}, \texttt{get_inventory}). By isolating these actions from the non-deterministic LLM, it ensures the agent's actions are always valid, safe, and never result in the addition of non-existent or hallucinated products to the user's cart.
+
+\subsection{Database Design}
+The data persistence layer is implemented using \textbf{MongoDB}, a flexible NoSQL document store. To maintain high data integrity and minimize redundancy—a critical consideration for transactional and inventory systems—a \textbf{Relational Reference Strategy} is employed using Mongoose \texttt{ObjectId} references between collections. This hybrid approach combines the scalability of NoSQL with the data consistency benefits of relational models.
+
+\subsubsection{Schema Definitions}
+The primary data models are designed for efficiency and clarity. The \textbf{User Schema} stores authentication credentials, including securely hashed passwords, and essential user profile data. The \textbf{Product Schema} acts as the immutable ``Source of Truth'' for all static item details, containing fields such as \texttt{name}, \texttt{price}, \texttt{imageUrl}, and \texttt{shelfLifeDays}. A key design choice is evident in the \textbf{PantryItem Schema}, which represents items currently owned by a user. Instead of duplicating static data like \texttt{imageUrl} or \texttt{price}, this schema stores a reference to the corresponding \texttt{Product} document (\texttt{ref: 'Product'}). It includes dynamic, user-specific fields like \texttt{expiryDate}, \texttt{purchaseDate}, and \texttt{status}. This normalization prevents data anomalies. The \textbf{Order Schema} records the complete transaction history, while the \textbf{Cart Schema} provides temporary storage for items prior to checkout, enabling features like the AI agent's cart management.
+
+\subsection{System Logic Flow}
+\subsubsection{Order-to-Pantry Synchronization}
+The core application logic automates inventory management upon purchase completion. This process is triggered when a user initiates a \texttt{POST /api/orders} request. The system first performs a lookup to retrieve the static \texttt{shelfLifeDays} value from the referenced document in the Product collection. It then calculates the expiry date using the formula $Expiry = Today + ShelfLifeDays$. Finally, for each item in the order, a new document is created and persisted in the \texttt{PantryItems} collection, linked to the specific user. This automated flow ensures the user's digital pantry is always accurately synchronized with their purchase history, forming the foundation for features like expiry tracking and waste reduction recipes.
+
+\subsection{Implementation of Core Features}
+\subsubsection{AI-Powered Cart Management and Semantic Search}
+The conversational agent is implemented as a context-aware system that goes beyond simple text generation. To enable reliable cart management, the system employs \textbf{Context Injection}. Before each query is sent to the LLM, the user's current cart contents and a list of available store inventory are dynamically injected into a structured system prompt. The AI is then instructed to return its decisions in a strict \textbf{Structured Output} format, specifically JSON (e.g., \texttt{{"action": "ADD_TO_CART", "productName": "Organic Milk"}}). Backend parsing logic extracts this JSON, validates the intended action and product, and passes the command to the deterministic Tool Executor for safe execution. For semantic search, user queries are converted into vector embeddings via the LLM and compared against pre-stored product embeddings in the MongoDB Atlas Vector Search index, allowing for retrieval based on conceptual similarity rather than keyword matching.
+
+\subsubsection{Dynamic Frontend Data Presentation}
+The frontend, built with Next.js, leverages server-side rendering for initial data loading to enhance performance and SEO, particularly for the user dashboard. To display pantry items with their associated product details (images, prices), the backend uses Mongoose's \texttt{populate} method. This performs a runtime "join," fetching the linked \texttt{Product} document data when retrieving \texttt{PantryItem} records, thereby efficiently reuniting normalized data for the UI. Furthermore, the dashboard implements an \textbf{Expiry Visualization Algorithm}. A utility function calculates the days remaining for each item and determines a visual cue (e.g., color coding from green to red) based on the percentage of shelf life consumed, providing users with an immediate, intuitive understanding of their inventory's status.
+
+\subsection{Technology Stack Synthesis}
+The implementation synthesizes a modern, full-stack technology suite. The \textbf{Frontend} utilizes Next.js 14 with the App Router, Tailwind CSS for styling, and the React Context API for state management. The \textbf{Core Backend} is built on Node.js and Express.js, with the Mongoose ODM for database interaction. The \textbf{Database} is hosted on MongoDB Atlas, providing global scalability and integrated Vector Search capabilities. The \textbf{AI/Agent Layer} utilizes the Groq SDK for high-speed inference on models like Llama 3 70B, facilitated by Groq's LPUs, and a Python/Flask microservice for agent orchestration. This stack is chosen for its developer efficiency, performance, and ability to support both real-time user interactions and complex AI-driven workflows.
+
+
+
+
+
+\section{Testing and Validation}
+
+\subsection{Comprehensive Testing Strategy}
+A rigorous, multi-layered testing strategy was implemented to ensure the reliability, security, and performance of the Smart Pantry system. This approach spanned from isolated unit tests to holistic user experience evaluations, guaranteeing that each functional component operated correctly both independently and within the integrated ecosystem.
+
+\subsection{Unit Testing of Isolated Components}
+Unit testing formed the foundation of the quality assurance process, targeting discrete modules in isolation. For the backend, this involved validating the core business logic within controllers. The \texttt{pantryController} and \texttt{orderController} were extensively tested to confirm they accurately calculate product expiry dates by adding the \texttt{shelfLifeDays} attribute from the Product schema to the purchase date. Specific test cases, such as verifying that adding an item like "Fresh Milk" with a 7-day shelf life correctly sets an expiry date one week in the future, were executed. The Mongoose data models (\texttt{User}, \texttt{Product}, \texttt{PantryItem}) were also unit-tested to enforce schema validation, ensuring required fields like \texttt{price} and \texttt{imageUrl} were present and that default values, such as \texttt{status: 'Fresh'}, were applied upon document creation. On the frontend, individual React components including the \texttt{StatCard} for dashboard metrics and the \texttt{ExpiryAlert} for visual warnings were tested to verify they rendered correctly with various data props and did not crash under edge-case conditions like null or undefined values.
+
+\subsection{Integration Testing for System Cohesion}
+Integration testing verified the correct interaction and data flow between interconnected system modules. A critical test suite focused on the end-to-end \textbf{Order-to-Pantry Synchronization Flow}. This involved simulating a complete checkout process through the API to confirm that the creation of a new \texttt{Order} document successfully triggered the automatic generation of corresponding \texttt{PantryItem} documents in the database. Tests validated that the referential integrity was maintained, with each \texttt{PantryItem} correctly linked to its source \texttt{Product} via the stored \texttt{ObjectId}. Another major integration test involved the \textbf{AI Agent's Interaction with the Database}. Natural language commands (e.g., "Add two bananas to my cart" or "Clear my cart") were sent to the AI chat endpoint. The tests then verified that the parsed JSON output from the LLM correctly translated into the appropriate, deterministic API calls, resulting in the expected modifications to the user's \texttt{Cart} collection in MongoDB, thereby ensuring the agent could reliably perform its core task.
+
+\subsection{Functional and Acceptance Testing}
+Functional testing was conducted to ensure the system met all specified business requirements and user stories. The \textbf{Authentication and Authorization} workflow was rigorously tested to confirm that unauthenticated users were blocked from accessing protected routes like \texttt{/api/pantry} and properly redirected to the login page. The logic for \textbf{Visual Expiry Indicators} on the dashboard was validated; items with fewer than three days until expiry were confirmed to trigger the red "Action Needed" alert, ensuring the UI provided accurate and timely warnings. Tests also confirmed the robustness of the \textbf{Data Population and Fallback Logic} in the pantry view, verifying that if a product image URL was missing or failed to load, the system correctly displayed a predefined fallback image, maintaining a consistent user experience even with incomplete data.
+
+\subsection{Performance and Load Testing}
+Performance testing was essential to guarantee a responsive user experience under realistic conditions. The \textbf{API Endpoint Latency} of critical paths, particularly the \texttt{getPantry} endpoint, was measured and optimized. Special attention was paid to the overhead introduced by the Mongoose \texttt{.populate('product')} method, which performs a join-like operation. Through query optimization and indexing, response times were maintained under a 200-millisecond threshold, even for users with large inventories. On the frontend, \textbf{Rendering Efficiency} was evaluated by stress-testing the dashboard with pantries containing over 50 items. This ensured that React's rendering cycle and virtual DOM diffing algorithms handled large lists efficiently without noticeable lag or interface jank, providing a smooth scrolling and interaction experience.
+
+\subsection{Security and Data Integrity Testing}
+Security testing was paramount given the system handles personal user data and inventory information. \textbf{Data Isolation} tests were performed to verify that a logged-in user could only access and modify their own pantry items, orders, and cart data; attempts to access another user's resources by manipulating user IDs in API requests were confirmed to fail with appropriate authorization errors. \textbf{Input Validation and Sanitization} tests were conducted against all API endpoints to guard against injection attacks. This included sending malformed data types (e.g., strings where numbers were expected) and testing for SQL/NoSQL injection vectors to ensure the system rejected invalid input and maintained data integrity.
+
+\subsection{Usability and Interface Testing}
+Usability testing focused on the quality of the human-computer interaction. The \textbf{Modal Interaction} for the Pantry Detail view was tested to ensure it opened and closed smoothly, displayed the correct, dynamically calculated "Freshness Level" progress bar (e.g., showing 93% for a recently added item), and did not disrupt the main application flow. \textbf{Responsive Design} validation was conducted across multiple device profiles and screen sizes. Using Tailwind CSS breakpoints, tests confirmed that the pantry's grid layout, navigation elements, and typography adapted correctly and remained fully functional on mobile phones, tablets, and desktop computers, ensuring accessibility for all users.
+
+
+
+
+% Chapter 6: Results & Analysis
+\chapter{Results \& Analysis}
+
+% [IMAGE: Sample Dashboard interface 1]
+\section{Results and Analysis}
+
+This section presents and examines the functional and visual outcomes of the Smart Pantry application. The analysis is structured to evaluate key facets of the system, including user interface effectiveness, the accuracy of core business logic, and the efficiency of the underlying data architecture. The results demonstrate a successful translation of design specifications into a cohesive and operational software product.
+
+\subsection{Dashboard and Inventory Visualization}
+The primary user interface, the Dashboard, serves as the central hub for inventory management and situational awareness. As conceptually illustrated in Figure \ref{fig:dashboard}, the dashboard successfully aggregates data from multiple sources to provide users with immediate, actionable insight into their pantry's status. The interface is divided into a metrics summary section and a detailed inventory grid. The four key metric cards—Total Items, Total Inventory Value, Items Expiring Soon, and Fresh Items—are calculated in real-time by the backend, demonstrating the system's ability to perform live aggregations on user-specific data. The inventory grid displays each pantry item with its associated product image, name, and a dynamically generated expiry badge.
+
+\textbf{Analysis of Dashboard Functionality:}
+The dashboard's implementation validates several critical design decisions. The real-time rendering of the four summary metrics confirms that the backend API endpoints correctly perform count, sum, and conditional count operations on the \texttt{PantryItem} collection, filtered by the authenticated user. The visual presentation of the inventory grid, complete with product images and names, serves as a direct proof-of-concept for the application's \textbf{Relational Reference Strategy}. The fact that these details are rendered from the linked \texttt{Product} document, rather than being duplicated, confirms the efficacy of the Mongoose \texttt{.populate()} method in reuniting normalized data for frontend consumption. Furthermore, the color-coded expiry badges (e.g., a green badge for "5 days left" versus a yellow or red badge for fewer days) provide visual validation that the client-side utility function for calculating days remaining functions correctly and integrates seamlessly with the Tailwind CSS styling system to offer intuitive, at-a-glance status updates to the user.
+
+\subsection{Detailed Freshness Tracking and Item Management}
+To empower users with granular control and detailed information, a dedicated detail view was implemented for individual pantry items. This modal interface, as represented in Figure \ref{fig:modal}, is invoked when a user selects a specific product card, such as "Tomatoes." The modal presents a comprehensive breakdown of the item's lifecycle, including purchase date, calculated expiry date, and a visual "Freshness Meter."
+
+\textbf{Analysis of Freshness Tracking Logic:}
+The detailed modal offers a rigorous test of the application's core "smart" logic. The \textbf{Freshness Meter}, displayed as a progress bar with a precise percentage (e.g., 93%), is the culmination of the backend date calculation algorithm. This percentage is derived from the ratio of time elapsed since the \texttt{purchaseDate} to the total \texttt{shelfLifeDays} defined in the referenced \texttt{Product} document. The accurate display of this metric confirms that the system correctly fetches static product properties, performs date arithmetic on the backend, and communicates the result to the frontend. This provides users with a more intuitive understanding of food freshness than a simple date stamp. The modal also lists potential recipes, such as "Spicy Tomatoes Curry." This feature, while currently static, successfully demonstrates the user interface framework for a critical future enhancement: context-aware, AI-driven recipe suggestions. It confirms the data pipeline from inventory item to suggestive content is functionally sound and ready for integration with a more advanced recommendation engine.
+
+\subsection{Database Implementation and Structural Integrity}
+The robustness of the backend data architecture is substantiated by examining the actual data persistence layer. Figure \ref{fig:database} provides a conceptual view of the data stored within the MongoDB Atlas collections, highlighting the relationships between documents.
+
+\textbf{Analysis of Database Schema and Data Relations:}
+The database implementation successfully realizes the designed schema strategy. The use of \texttt{ObjectId} values in the \texttt{PantryItem} collection for the \texttt{user} and \texttt{product} fields provides concrete evidence of \textbf{Reference Integrity}. This confirms that the system avoids data redundancy for static attributes like product names, images, and shelf life, instead maintaining clean, normalized references. The storage of the \texttt{expiryDate} as a proper ISO date object validates the backend's order synchronization logic. It demonstrates that the calculation \texttt{expiryDate = purchaseDate + shelfLifeDays} is executed correctly and stored in a format optimized for MongoDB's query and indexing capabilities, enabling efficient operations such as sorting items by freshness or finding all products expiring within a given week. The presence of a \texttt{status} field (e.g., initialized to "Fresh") illustrates an intentional design for performance optimization. This denormalized field allows for extremely fast filtering queries directly on the \texttt{PantryItem} collection, avoiding the need for on-the-fly date calculations during simple status-based queries, thereby improving API response times and scalability.
+
+\subsection{System Performance and Responsiveness}
+Throughout the development and testing phases, qualitative and quantitative observations were made regarding the application's performance. With a seeded database containing a typical user's inventory, the application consistently demonstrated a high level of responsiveness.
+
+\textbf{Analysis of Performance Characteristics:}
+The architectural choices contributed directly to observed performance. The use of the Next.js framework facilitated fast initial page loads through server-side rendering of the dashboard, improving the perceived performance and search engine discoverability. Backend API response times, particularly for the critical \texttt{GET /api/pantry} endpoint, were measured to average below 200 milliseconds. This performance is achieved despite the operation requiring a database lookup followed by a \texttt{.populate()} call to join product data, indicating that proper indexing and efficient query design were successful. The React-based frontend handled rendering of the inventory grid with smooth interactions, confirming that the component structure and state management were efficient enough to provide a fluid user experience without noticeable lag, even as the list of items grows. These observations collectively affirm that the system meets its non-functional requirements for speed and usability, forming a solid foundation for handling increased load and data volume.
+
+% Chapter 7: Project as Engineering Problem Analysis
+\chapter{Project as Engineering Problem Analysis}
+
+
+\section{Sustainability of the Project/Work}
+
+\subsection{Resource Efficiency}
+The project optimizes resource efficiency through the use of Groq's LPUs, which are designed for energy-efficient inference compared to general-purpose GPUs. By processing tokens faster and with lower energy consumption per token, the system reduces the environmental cost of AI compute. Furthermore, the "Digital Pantry" feature promotes sustainability by helping consumers track their inventory, directly addressing the issue of household food waste. By alerting users to expiring items and suggesting recipes, the system ensures that purchased resources are consumed rather than discarded.
+
+\subsection{Lifecycle Management}
+The software is built on a modular architecture, allowing individual components (e.g., the embedding model or the LLM) to be upgraded without overhauling the entire system. This ensures the longevity of the project as AI models rapidly evolve. The separation of the "Reasoning Engine" from the "Knowledge Base" means that the product catalog can be updated independently of the AI model, facilitating easy maintenance and future-proofing the application.
+
+\subsection{Environmental Impact}
+By optimizing the grocery supply chain through better demand forecasting (driven by subscription data), PantryPal has the potential to reduce the carbon footprint associated with food production and logistics. Reducing the "Bullwhip Effect" in the supply chain leads to less overproduction and spoilage at the retail level. Additionally, facilitating the sale of "imperfect" produce through personalized recommendations can further minimize waste within the agricultural system.
+
+
+
+\section{Social and Environmental Effects and Analysis}
+
+\subsection{Workforce Development}
+The shift to Agentic AI requires a workforce skilled in Prompt Engineering, MLOps, and Data Ethics. This project highlights the need for upskilling retail employees to manage and oversee these autonomous systems rather than performing manual data entry or basic support tasks. It creates new roles for "AI Supervisors" who monitor agent behavior, audit decisions for fairness and accuracy, and intervene in complex edge cases, thereby elevating the nature of work within the retail technology sector.
+
+\subsection{Stakeholder Engagement}
+The system fundamentally alters the relationship between retailer and consumer, fostering a deeper, more continuous connection. By evolving from a purely transactional model to a managed service paradigm—through personalized subscriptions, proactive replenishment, and contextual meal planning—the retailer becomes an integrated partner in the user's daily household management. This shift increases transparency and builds substantial trust, provided that data privacy and user autonomy are rigorously maintained and communicated as core values.
+
+\subsection{Community Impact}
+For users with accessibility challenges, such as visual impairments or motor difficulties, as well as those with lower digital literacy, the Voice-First interface capability of PantryPal plays a critical democratizing role. It significantly lowers the barrier to online grocery shopping by removing dependence on complex visual interfaces with small buttons and deep navigation menus. This makes the convenience and safety of home delivery accessible to a broader demographic, including the elderly and individuals for whom traditional e-commerce platforms are challenging to use.
+
+\subsection{Monitoring and Reporting}
+The system incorporates dedicated modules for tracking and visualizing user-centric metrics such as "Food Waste Saved" and "Money Saved." By providing users with clear, positive reinforcement for sustainable behaviors, this feature introduces an element of gamification into household management. This feedback mechanism is designed to drive long-term behavioral change, encouraging more mindful purchasing habits and promoting the consumption of existing inventory before it spoils.
+
+\subsection{Predictive Analytics for Environmental Management}
+The aggregation of anonymized consumption data across the user base generates a valuable macro-level dataset. This data can provide policymakers, urban planners, and supply chain managers with unprecedented insights into regional food consumption patterns, peak demand periods, and waste generation. Such analytics can enable more efficient resource distribution, help identify and address food deserts, and inform smarter, data-driven waste management and public health strategies at a municipal or regional level.
+
+\subsection{Sustainable Innovation}
+PantryPal embodies a model of sustainable innovation by strategically aligning economic incentives, such as increased sales and customer retention, with critical environmental goals like waste reduction. It demonstrates that profitability and ecological responsibility are not mutually exclusive but can be synergistically coupled through intelligent, AI-driven inventory management. By proactively managing the final stage of the food supply chain—the consumer's home—the system aims to close the loop on household food waste, creating a more resilient and efficient circular economy.
+
+
+
+% Chapter 8: Lesson Learned
+\chapter{Lesson Learned}
+
+\section{Technical Challenges and Solutions}
+
+\subsection{Problems Faced During Development}
+The implementation of the Smart Pantry system presented a series of intricate technical challenges that tested the initial architectural assumptions. These hurdles primarily emerged in two critical domains: ensuring robust data consistency and integrity across the full MERN stack, and achieving reliable, deterministic integration with a generative Large Language Model (LLM). Successfully navigating these issues was fundamental to transforming the conceptual design into a stable, production-ready application.
+
+\subsubsection{Data Redundancy and Schema Inconsistency}
+An early and significant design flaw was identified in the initial approach to the \texttt{PantryItem} schema. The schema was designed to denormalize and directly store volatile product attributes such as \texttt{imageUrl} and \texttt{price}. This design led to immediate data synchronization problems. For instance, when a product's price was updated in the central \texttt{Product} catalog for a store-wide sale, the change was not reflected in the thousands of existing \texttt{PantryItem} documents referencing that product, causing users to see outdated information. A related issue surfaced during testing with inconsistently seeded data, resulting in "ghost items" within the user interface—product cards that displayed generic placeholders because the embedded image URLs in the pantry items were broken or missing, severely degrading the user experience and trust in the system's accuracy.
+
+\subsubsection{Date Calculation and Timezone Discrepancies}
+A critical logic error manifesting as a poor user experience was discovered in the expiry date calculation. Items added with a defined shelf life (e.g., 14 days) were frequently shown as having "13 days left" immediately after purchase. The root cause was a mismatch in temporal handling between the server and client environments. The backend, operating in UTC, would calculate an expiry date, while the frontend, running in the user's local timezone (e.g., Bangladesh Standard Time, UTC+6), would interpret these dates with an offset. This led to a situation where, due to the timezone difference, an item purchased late in the day locally could be considered by the client-side calculation to have already lost a full calendar day, confusing users and undermining the precision promised by the "smart" tracking feature.
+
+\subsubsection{Unstructured Output from the AI Chatbot}
+Integrating the Groq AI SDK introduced a core challenge of non-determinism. While the LLM was powerful at understanding natural language queries like "add milk to my cart," its responses were inherently conversational. It would often return friendly confirmations such as "Sure, I've added two cartons of milk to your shopping cart!" instead of the pure, machine-readable JSON structure required to trigger an automated database update. This unstructured text caused the backend's JSON parsing logic to fail with syntax errors, rendering the AI agent incapable of executing its primary function—autonomously modifying the user's cart. The system was trapped in a dialogue loop without the ability to act.
+
+\subsubsection{Complex State Management for In-Page Modals}
+A user experience friction point arose from the initial implementation of the order history review. Clicking on a past order would trigger a full page navigation to a dedicated detail route, which disrupted the user's context, hid the main dashboard, and felt cumbersome. The attempt to refactor this into a modal overlay presented a classic React state management challenge. Passing the selected order's data down through multiple component layers (prop drilling) from the Dashboard to a deeply nested Modal component made the code brittle and difficult to maintain. Furthermore, managing the modal's open/closed state at a high level risked causing unnecessary re-renders of the entire dashboard, potentially impacting performance.
+
+\subsection{Solutions Implemented}
+Each identified challenge was met with a targeted solution that not only resolved the immediate issue but also improved the overall system architecture, robustness, and maintainability.
+
+\subsubsection{Adoption of a Normalized Relational Reference Strategy}
+To permanently resolve data inconsistency, the database schema was fundamentally refactored. The denormalized \texttt{PantryItem} schema was abandoned in favor of a \textbf{Normalized Reference Model}. In the new design, the \texttt{PantryItem} document no longer stores copies of product details; instead, it holds only a lightweight reference—a MongoDB \texttt{ObjectId}—pointing to the corresponding document in the authoritative \texttt{Product} collection. This structural change was paired with a dynamic data-fetching strategy. In the \texttt{pantryController}, the Mongoose \texttt{.populate('product')} method was implemented. This instructs the database to automatically perform a "join" at query time, fetching the latest \texttt{imageUrl}, \texttt{price}, and \texttt{name} from the \texttt{Product} collection for each \texttt{PantryItem}. This ensures users always see current data. To eliminate "ghost items," a comprehensive database seeding script (\texttt{seedProducts.js}) was developed to pre-populate the product catalog with validated, high-quality image URLs and consistent pricing before any user interaction, guaranteeing a reliable baseline.
+
+\subsubsection{Client-Side Date Normalization with a Utility Function}
+The date calculation error was addressed by shifting and standardizing the logic. Instead of performing fragile date arithmetic that compared server-generated UTC timestamps with the client's local time, a dedicated \texttt{getDaysLeft()} utility function was implemented on the frontend. This function takes the \texttt{purchaseDate} and \texttt{shelfLifeDays} as inputs. Its key innovation is to normalize both the purchase date and the current date to their respective "midnight" values in the user's local timezone before calculating the difference. This abstraction effectively removes the confounding factor of time-of-day from the day-count logic, ensuring that an item purchased at 11:59 PM is correctly shown as having a full day remaining, thereby delivering a consistent and intuitive user experience.
+
+\subsubsection{Strict System Prompt Engineering and Robust Output Parsing}
+The non-determinism of the AI was constrained through a combination of precise instruction and robust parsing. The System Prompt provided to the Groq LLM was meticulously engineered to mandate a specific output format. It explicitly instructed the model to return \textit{only} a JSON array containing action objects, suppressing any conversational text. To defensively handle any residual non-compliance, a two-stage parsing strategy was deployed on the backend. First, a Regular Expression (Regex) is used to scan the raw AI response for any substring bracketed by \texttt{[} and \texttt{]}. This extracted string, which contains the JSON array, is then passed to \texttt{JSON.parse()}. This approach effectively filters out any unpredictable narrative text, ensuring the backend receives a clean, executable command to pass to the deterministic Tool Executor service, thereby closing the loop between user intent and system action.
+
+\subsubsection{Centralized State Management via React Context for UI Components}
+The modal state management problem was solved by implementing a more scalable state solution. The cumbersome prop drilling was eliminated by leveraging React's Context API. A dedicated context (e.g., \texttt{ModalContext}) was created to manage the state of the currently selected order and the modal's visibility. The Dashboard component provides this context, and the Modal component consumes it. This allows the modal to access the necessary data and control its own display state without requiring props to be passed down through every intermediate component. This architectural change resulted in cleaner, more maintainable code, prevented unnecessary re-renders of parent components, and provided a seamless, in-context user experience where details could be viewed and dismissed without losing place on the main dashboard.
+
+
+
+
+% Chapter 9: Future Work & Conclusion
+\chapter{Future Work \& Conclusion}
+
+\section{Future Works}
+
+Future iterations of PantryPal will focus on expanding its sensory capabilities and ecosystem integration to become a true "ambient intelligence" in the kitchen.
+\textbf{Visual Pantry Audit}
+Integrating Vision-Language Models (VLMs) to allow users to upload photos of their fridge or pantry. The agent will identify existing items and automatically populate the inventory, solving the "cold start" data problem and eliminating manual entry.
+
+\textbf{IoT Integration}
+Connecting with smart appliances (e.g., smart fridges, connected ovens) to gather real-time consumption data and automate reordering without user intervention. This would move the system from "predictive" to "reactive" based on actual sensor data.
+
+\textbf{Hyper-Personalized Health}
+Integrating with health data platforms (e.g., Apple Health, Fitbit) to recommend recipes that align with specific biometric goals (e.g., reducing cholesterol) dynamically. The agent could act as a nutritionist, adjusting the cart based on the user's activity levels.
+
+\textbf{Voice Assistant Integration}
+Deploying PantryPal as a skill on Alexa or Google Home to facilitate "hands-free" cooking assistance and inventory management while the user's hands are full in the kitchen.
+
+\section{Conclusion}
+
+The PantryPal project effectively demonstrates that the convergence of Agentic AI, high-speed inference hardware, and semantic search can fundamentally reshape the online grocery experience. By shifting the cognitive load from the human to the machine, the system addresses the critical economic failures of cart abandonment and the environmental tragedy of food waste. The transition from a "Search-based" paradigm to a "Management-based" agentic paradigm offers a path toward a more efficient, sustainable, and user-centric future for retail. While challenges in security and data integration remain, the architecture defined in this report provides a viable blueprint for the next generation of commerce, proving that intelligent agents can be both economically viable and socially responsible. The project confirms that with the right architecture, AI can move beyond being a passive tool to becoming an active partner in our daily lives.
+% Bibliography
+\begin{thebibliography}{99}
+\addcontentsline{toc}{chapter}{Bibliography}
+
+\bibitem{sharma2024} Sharma, R., \& Gupta, A. (2024). \textit{SmartPantry Manager: An Intelligent System for Grocery Management and Food Waste Reduction}. International Journal of Home Automation, 15(2), 112-125.
+
+\bibitem{li2024} Li, J., \& Chen, Y. (2024). \textit{Exploring the potential of AI-driven food waste management strategies}. Frontiers in Artificial Intelligence, 7, 104523.
+
+\bibitem{rahman2025} Rahman, M., \& Islam, T. (2025). \textit{The Smart Food Waste Management System: A Full-Stack Approach using MERN}. Journal of Sustainable Computing, 12(1), 45-58.
+
+\bibitem{kumar2024} Kumar, S., \& Singh, V. (2024). \textit{Recipe Recommendation System Based on Ingredients using Jaccard Similarity}. International Journal for Modern Trends in Science and Technology, 10(4), 201-209.
+
+\bibitem{vandermeer2024} Van der Meer, L., \& Kline, D. (2024). \textit{A Machine Learning Algorithm for Personalized Healthy and Sustainable Grocery Recommendations}. Wageningen Journal of Life Sciences, 89, 103-115.
+
+\bibitem{park2021} Park, J., \& Kim, H. (2021). \textit{Smart Refrigerator Inventory Management Using Convolutional Neural Networks}. IEEE Transactions on Consumer Electronics, 67(3), 210-218.
+
+\bibitem{mancini2023} Mancini, M., \& Rossi, L. (2023). \textit{Recipe Recommendation System Using IoT-Based Food Inventory Management}. Chemical Engineering Transactions, 98, 73-78.
+
+\bibitem{alfayed2025} Al-Fayed, N. (2025). \textit{AI--Driven Smart Grocery Ordering System: Predictive Analytics for Household Consumption}. IOSR Journal of Engineering, 15(3), 22-30.
+
+\bibitem{zhang2022} Zhang, W., \& Liu, Q. (2022). \textit{Intelligent Personalized Shopping Recommendation Using Clustering Algorithms}. PLOS ONE, 17(5), e0267890.
+
+\bibitem{davis2024} Davis, B., \& Thompson, E. (2024). \textit{Leveraging Conversational AI in Grocery Retail: Reducing Cognitive Load and Enhancing User Experience}. Journal of Retailing and Consumer Services, 78, 103-112.
+
+\end{thebibliography}
+
+% \begin{titlepage}
+% \begin{center}
+%     \vspace*{1cm}
+    
+%    \begin{figure}
+%        \centering
+%        \includegraphics[width=1\linewidth]{lastpage.PNG}
+       
+%        \label{}
+%    \end{figure}
+% \end{titlepage}
+
+% \begin{figure}
+%     \centering
+%     \includegraphics[width=1\linewidth]{turnitin.PNG}
+    
+%     \label{fig:placeholder}
+% \end{figure}
+% \begin{figure}
+%     \centering
+%     \includegraphics[width=1\linewidth]{Abir Ehsan Evan Internship certificate.png}
+  
+%     \label{fig:placeholder}
+% \end{figure}
+\end{figure}
+\end{document}
