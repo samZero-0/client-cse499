@@ -1,182 +1,172 @@
 'use client';
-import { useState, useEffect } from 'react';
-import { FaTrashAlt, FaPlus, FaMinus, FaSave, FaBox, FaTags } from 'react-icons/fa';
 
-export default function BundleBuilder({ initialItems, onSave, savings }) {
-  const [items, setItems] = useState(initialItems || []);
+import { SUBSCRIPTION_DISCOUNT } from '@/utils/pricing';
 
-  // Keep items in sync with parent's changes
-  useEffect(() => {
-    setItems(initialItems || []);
-  }, [initialItems]);
+const PLACEHOLDER = 'https://placehold.co/120x120/EDF0DC/5A6558?text=Item';
 
-  // 1. Update Quantity (or remove if zero)
+/**
+ * Controlled bundle editor. The parent owns `items`; edits go through `onChange`,
+ * and `onSave` persists them.
+ */
+export default function BundleBuilder({
+  items,
+  onChange,
+  onSave,
+  saving,
+  dirty,
+  frequency,
+  nextDelivery,
+  status = 'active',
+  canManage = false,
+  onSkip,
+  onStatusChange,
+}) {
   const updateQuantity = (id, change) => {
-    setItems(prev => {
-        return prev
-            .map(item => item._id === id 
-                 ? { ...item, quantity: item.quantity + change }
-                 : item
-            )
-            .filter(item => item.quantity > 0); // Remove if qty goes to zero
-    });
+    onChange(
+      items
+        .map((item) => (item._id === id ? { ...item, quantity: item.quantity + change } : item))
+        .filter((item) => item.quantity > 0)
+    );
   };
 
-  // 2. Remove Item
-  const removeItem = (id) => {
-    setItems(prev => prev.filter(item => item._id !== id));
-  };
+  const removeItem = (id) => onChange(items.filter((item) => item._id !== id));
 
-  // 3. Calculate Totals
+  const unitCount = items.reduce((sum, item) => sum + item.quantity, 0);
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const discount = savings || Math.round(subtotal * 0.15);
+  const discount = Math.round(subtotal * SUBSCRIPTION_DISCOUNT);
   const total = subtotal - discount;
 
+  const paused = canManage && status === 'paused';
+  const nextDeliveryLabel = paused
+    ? 'Paused'
+    : canManage && nextDelivery
+      ? new Date(nextDelivery).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+      : 'Scheduled when you save';
+
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+    <div className="overflow-hidden rounded-[1.75rem] border border-line bg-surface">
       {/* Header */}
-      <div className="bg-gradient-to-r from-emerald-600 to-teal-600 p-6 text-white">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-2xl font-bold mb-2 flex items-center gap-2">
-              <FaBox className="text-3xl" />
-              Your Bundle
-            </h3>
-            <p className="text-emerald-50">
-              {items.length === 0 ? 'Start building your subscription' : `${items.length} items selected`}
-            </p>
-          </div>
-          {items.length > 0 && (
-            <div className="text-right">
-              <p className="text-sm text-emerald-100">Estimated Savings</p>
-              <p className="text-3xl font-bold">৳{discount}</p>
-            </div>
-          )}
+      <div className="bg-primary px-6 py-5 text-on-primary">
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] opacity-70">Your bundle</p>
+        <div className="mt-2 flex items-end justify-between gap-4">
+          <p className="text-2xl font-extrabold tracking-tight">
+            {items.length === 0 ? 'Empty' : `${unitCount} ${unitCount === 1 ? 'item' : 'items'}`}
+          </p>
+          <p className="text-sm opacity-80">{frequency}</p>
         </div>
+        <p className="mt-1 text-sm opacity-70">Next delivery: {nextDeliveryLabel}</p>
       </div>
 
-      {/* Content */}
+      {canManage && (
+        <div className="flex border-b border-line text-sm">
+          <button
+            type="button"
+            onClick={onSkip}
+            disabled={paused}
+            className="flex-1 py-3 font-semibold text-ink transition-colors hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Skip next delivery
+          </button>
+          <button
+            type="button"
+            onClick={() => onStatusChange(paused ? 'active' : 'paused')}
+            className="flex-1 border-l border-line py-3 font-semibold text-ink transition-colors hover:bg-surface-muted"
+          >
+            {paused ? 'Resume deliveries' : 'Pause deliveries'}
+          </button>
+        </div>
+      )}
+
       <div className="p-6">
         {items.length === 0 ? (
-          <div className="text-center py-16">
-            <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <FaBox className="text-4xl text-gray-400" />
-            </div>
-            <h4 className="text-xl font-bold text-gray-800 mb-2">Bundle is Empty</h4>
-            <p className="text-gray-500 max-w-md mx-auto">
-              Browse products below and click "Add to Bundle" to start building your subscription package
+          <div className="py-8 text-center">
+            <p className="font-bold text-ink">Nothing here yet</p>
+            <p className="mx-auto mt-2 max-w-xs text-sm text-ink-muted">
+              Add the essentials you buy every time. They will arrive on your schedule.
             </p>
           </div>
         ) : (
           <>
-            {/* Items List */}
-            <div className="space-y-3 mb-6">
-              {items.map((item, index) => (
-                <div 
-                  key={item._id} 
-                  className="group flex items-start gap-4 p-4 bg-gray-50 rounded-xl border-2 border-gray-200 hover:border-emerald-300 hover:bg-emerald-50/30 transition-all duration-300"
-                  style={{ animation: `fadeInUp 0.3s ease-out ${index * 0.05}s` }}
-                >
-                  {/* Item Image */}
-                  <div className="w-16 h-16 bg-white rounded-lg flex-shrink-0 overflow-hidden border border-gray-200">
-                    <img 
-                      src={item.imageUrl || 'https://placehold.co/100x100?text=Item'}
-                      alt={item.name}
-                      className="w-full h-full object-cover"
-                    />
+            <ul className="-my-3 divide-y divide-line">
+              {items.map((item) => (
+                <li key={item._id} className="flex items-center gap-4 py-3">
+                  <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-surface-muted">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={item.imageUrl || PLACEHOLDER} alt={item.name} className="h-full w-full object-cover" />
                   </div>
 
-                  {/* Item Info */}
-                  <div className="flex-grow">
-                    <h4 className="font-bold text-gray-900 mb-1">{item.name}</h4>
-                    <div className="flex items-center gap-3 text-sm">
-                      <span className="text-gray-600">৳{item.price} × {item.quantity}</span>
-                      <span className="font-bold text-emerald-600">= ৳{item.price * item.quantity}</span>
-                    </div>
-                  </div>
-
-                  {/* Controls */}
-                  <div className="flex flex-col gap-2">
-                    {/* Quantity Controls */}
-                    <div className="flex items-center gap-1 bg-white border border-gray-300 rounded-lg overflow-hidden">
-                      <button 
-                        onClick={() => updateQuantity(item._id, -1)} 
-                        className="p-2 hover:bg-red-50 text-red-600 transition-colors"
-                        title="Decrease quantity"
-                      >
-                        <FaMinus className="text-xs" />
-                      </button>
-                      <span className="font-bold text-gray-800 px-3 text-center min-w-[2rem]">
-                        {item.quantity}
-                      </span>
-                      <button 
-                        onClick={() => updateQuantity(item._id, 1)}
-                        className="p-2 hover:bg-green-50 text-green-600 transition-colors"
-                        title="Increase quantity"
-                      >
-                        <FaPlus className="text-xs" />
-                      </button>
-                    </div>
-
-                    {/* Remove Button */}
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold text-ink">{item.name}</p>
+                    <p className="text-xs text-ink-muted tabular-nums">
+                      ৳{item.price} each &middot; ৳{item.price * item.quantity}
+                    </p>
                     <button
+                      type="button"
                       onClick={() => removeItem(item._id)}
-                      className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
-                      title="Remove item"
+                      className="mt-1 text-xs font-medium text-ink-muted underline-offset-2 hover:text-danger hover:underline"
                     >
-                      <FaTrashAlt className="text-xs" />
+                      Remove
                     </button>
                   </div>
-                </div>
-              ))}
-            </div>
 
-            {/* Pricing Breakdown */}
-            <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl p-6 mb-6 border-2 border-emerald-200">
-              <div className="space-y-3">
-                {/* Subtotal */}
-                <div className="flex justify-between items-center text-gray-700">
-                  <span>Subtotal ({items.reduce((sum, item) => sum + item.quantity, 0)} items)</span>
-                  <span className="font-semibold">৳{subtotal}</span>
-                </div>
-
-                {/* Discount */}
-                <div className="flex justify-between items-center text-green-600">
-                  <span className="flex items-center gap-2">
-                    <FaTags />
-                    Subscription Discount (15%)
-                  </span>
-                  <span className="font-semibold">- ৳{discount}</span>
-                </div>
-
-                {/* Divider */}
-                <div className="border-t-2 border-emerald-300 pt-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-xl font-bold text-gray-900">Total</span>
-                    <div className="text-right">
-                      <div className="text-sm text-gray-500 line-through">৳{subtotal}</div>
-                      <div className="text-2xl font-bold text-emerald-600">৳{total}</div>
-                    </div>
+                  <div className="flex shrink-0 items-center rounded-full border border-line">
+                    <button
+                      type="button"
+                      onClick={() => updateQuantity(item._id, -1)}
+                      aria-label={`Decrease ${item.name}`}
+                      className="h-8 w-8 rounded-full text-lg leading-none text-ink-muted transition-colors hover:bg-surface-muted hover:text-ink"
+                    >
+                      &minus;
+                    </button>
+                    <span className="min-w-6 text-center text-sm font-bold text-ink tabular-nums">{item.quantity}</span>
+                    <button
+                      type="button"
+                      onClick={() => updateQuantity(item._id, 1)}
+                      aria-label={`Increase ${item.name}`}
+                      className="h-8 w-8 rounded-full text-lg leading-none text-ink-muted transition-colors hover:bg-surface-muted hover:text-ink"
+                    >
+                      +
+                    </button>
                   </div>
-                </div>
+                </li>
+              ))}
+            </ul>
+
+            {/* Totals */}
+            <dl className="mt-6 space-y-2 border-t border-line pt-5 text-sm">
+              <div className="flex justify-between text-ink-muted">
+                <dt>Subtotal</dt>
+                <dd className="tabular-nums">৳{subtotal}</dd>
               </div>
-            </div>
-
-            {/* Save Button */}
-            <button 
-              onClick={() => onSave(items)} 
-              className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 text-white py-4 rounded-xl hover:from-emerald-700 hover:to-teal-700 font-bold text-lg transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center gap-3 group"
-            >
-              <FaSave className="text-xl group-hover:scale-110 transition-transform" />
-              Save Subscription Bundle
-            </button>
-
-            {/* Info Note */}
-            <p className="text-center text-sm text-gray-500 mt-4">
-              💡 You can modify your bundle anytime. Changes will apply to your next delivery.
-            </p>
+              <div className="flex justify-between text-success">
+                <dt>Subscription discount ({Math.round(SUBSCRIPTION_DISCOUNT * 100)}%)</dt>
+                <dd className="tabular-nums">&minus;৳{discount}</dd>
+              </div>
+              <div className="flex justify-between text-success">
+                <dt>Delivery</dt>
+                <dd>Free</dd>
+              </div>
+              <div className="flex items-baseline justify-between border-t border-line pt-3">
+                <dt className="font-bold text-ink">Per delivery</dt>
+                <dd className="text-2xl font-extrabold tracking-tight text-ink tabular-nums">৳{total}</dd>
+              </div>
+            </dl>
           </>
         )}
+
+        <button
+          type="button"
+          onClick={() => onSave(items)}
+          disabled={saving || !dirty}
+          className="mt-6 w-full rounded-full bg-primary py-3.5 text-sm font-semibold text-on-primary transition-colors hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          {saving ? 'Saving...' : dirty ? 'Save changes' : 'Saved'}
+        </button>
+        <p className="mt-3 text-center text-xs text-ink-muted">
+          {dirty
+            ? 'You have unsaved changes.'
+            : 'Paid cash on delivery. Prices follow the shop, so totals can change if prices do.'}
+        </p>
       </div>
     </div>
   );

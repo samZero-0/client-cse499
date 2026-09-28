@@ -1,254 +1,187 @@
 'use client';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useContext, useState, useEffect } from 'react';
 import { AuthContext } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
-import { FaShoppingBasket, FaLeaf, FaBars, FaTimes, FaUser } from 'react-icons/fa';
-import ChatBot from '../ai/ChatBot';
+import ThemeToggle from './ThemeToggle';
 
-export default function Navbar() {
+const publicLinks = [{ name: 'Shop', href: '/products' }];
+
+const memberLinks = [
+  { name: 'Dashboard', href: '/dashboard' },
+  { name: 'Pantry', href: '/pantry' },
+  { name: 'Subscriptions', href: '/subscription' },
+];
+
+export default function Navbar({ wide = false }) {
   const { user, logout } = useContext(AuthContext);
   const { cartItems } = useCart();
+  const pathname = usePathname();
   const [isScrolled, setIsScrolled] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  // Remember which route the mobile menu was opened on, so navigating closes it
+  const [menuPath, setMenuPath] = useState(null);
+  const isMenuOpen = menuPath === pathname;
 
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10);
-    };
-    window.addEventListener('scroll', handleScroll);
+    const handleScroll = () => setIsScrolled(window.scrollY > 8);
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  const links = user ? [...publicLinks, ...memberLinks] : publicLinks;
+  const cartCount = cartItems.length;
+
+  const isActive = (href) => pathname === href || pathname.startsWith(`${href}/`);
+
+  const linkClass = (href) =>
+    `relative text-sm font-medium transition-colors duration-200 after:absolute after:left-0 after:-bottom-1.5 after:h-px after:bg-current after:transition-all after:duration-300 ${
+      isActive(href)
+        ? 'text-ink after:w-full'
+        : 'text-ink-muted hover:text-ink after:w-0 hover:after:w-full'
+    }`;
+
   return (
-    <nav className={`sticky top-0 z-50 transition-all duration-300 ${
-      isScrolled 
-        ? 'bg-white/95 backdrop-blur-md shadow-lg text-gray-900' 
-        : 'bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 text-white shadow-md'
-    }`}>
-      <div className="container mx-auto px-4">
-        <div className="flex justify-between items-center py-4">
-          {/* Logo */}
-          <Link href="/" className="text-2xl font-bold flex items-center gap-2 group">
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center transform group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 ${
-              isScrolled 
-                ? 'bg-gradient-to-br from-emerald-500 to-teal-500' 
-                : 'bg-white/20 backdrop-blur-sm'
-            }`}>
-              <FaLeaf className={`text-xl ${isScrolled ? 'text-white' : 'text-emerald-100'}`}/>
-            </div>
-            <span className={`font-extrabold ${
-              isScrolled 
-                ? 'text-gray-900' 
-                : 'text-gray-900'
-            }`}>
-              PantryPal
-            </span>
+    <header
+      className={`sticky top-0 z-50 border-b transition-colors duration-300 ${
+        isScrolled || isMenuOpen
+          ? 'bg-canvas/85 backdrop-blur-xl border-line'
+          : 'bg-canvas border-transparent'
+      }`}
+    >
+      <nav className={`mx-auto flex h-16 items-center gap-4 px-5 lg:h-[72px] lg:px-8 ${wide ? 'max-w-[1600px]' : 'max-w-7xl'}`}>
+        {/* Brand */}
+        <div className="flex lg:flex-1">
+          <Link
+            href="/"
+            className="text-xl font-extrabold tracking-tight text-ink transition-opacity hover:opacity-80"
+          >
+            Pantry<span className="text-accent">Pal</span>
           </Link>
-          
-          {/* Desktop Navigation */}
-          <div className="hidden lg:flex gap-8 items-center font-medium">
-            <Link href="/products" className={`relative group py-2 ${
-              isScrolled ? 'text-gray-700 hover:text-emerald-600' : 'hover:text-emerald-100'
-            } transition-colors`}>
-              Shop
-              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-emerald-500 to-teal-500 group-hover:w-full transition-all duration-300"></span>
-            </Link>
-            {user && (
-              <>
-                <Link href="/dashboard" className={`relative group py-2 ${
-                  isScrolled ? 'text-gray-700 hover:text-emerald-600' : 'hover:text-emerald-100'
-                } transition-colors`}>
-                  Dashboard
-                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-emerald-500 to-teal-500 group-hover:w-full transition-all duration-300"></span>
-                </Link>
-                <Link href="/pantry" className={`relative group py-2 ${
-                  isScrolled ? 'text-gray-700 hover:text-emerald-600' : 'hover:text-emerald-100'
-                } transition-colors`}>
-                  My Pantry
-                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-emerald-500 to-teal-500 group-hover:w-full transition-all duration-300"></span>
-                </Link>
-                
-                <Link href="/subscription" className={`relative group py-2 ${
-                  isScrolled ? 'text-gray-700 hover:text-emerald-600' : 'hover:text-emerald-100'
-                } transition-colors`}>
-                  Subscriptions
-                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-emerald-500 to-teal-500 group-hover:w-full transition-all duration-300"></span>
-                </Link>
-              </>
-            )}
-          </div>
-
-          {/* Right Side Actions */}
-          <div className="flex items-center gap-4">
-            <div className="flex items-center">
-              <ChatBot />
-            </div>
-            {/* Cart Icon */}
-            <Link href="/cart" className={`relative p-2 rounded-xl transition-all duration-300 ${
-              isScrolled 
-                ? 'hover:bg-emerald-50' 
-                : 'hover:bg-white/20'
-            }`}>
-              <FaShoppingBasket className="text-2xl" />
-              {cartItems.length > 0 && (
-                <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full shadow-lg animate-pulse">
-                  {cartItems.length}
-                </span>
-              )}
-            </Link>
-
-            {/* User Actions */}
-            {user ? (
-              <div className="hidden md:flex items-center gap-3">
-                <div className={`flex items-center gap-2 px-4 py-2 rounded-xl ${
-                  isScrolled 
-                    ? 'bg-emerald-50 text-emerald-700' 
-                    : 'bg-white/20 backdrop-blur-sm'
-                }`}>
-                  <FaUser className="text-sm" />
-                 
-              <Link href="/profile" className="block px-4 py-2 text-gray-800 hover:bg-gray-100">
-                  <span className="hidden lg:block text-sm font-medium">{user.name}</span>
-              </Link>
-                
-                </div>
-                <button 
-                  onClick={logout} 
-                  className={`px-5 py-2 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg ${
-                    isScrolled
-                      ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:from-emerald-700 hover:to-teal-700'
-                      : 'bg-white text-emerald-600 hover:bg-emerald-50'
-                  }`}
-                >
-                  Logout
-                </button>
-              </div>
-            ) : (
-              <div className="hidden md:flex gap-3">
-                <Link 
-                  href="/login" 
-                  className={`px-5 py-2 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 ${
-                    isScrolled
-                      ? 'hover:bg-emerald-50 text-gray-700'
-                      : 'hover:bg-white/20'
-                  }`}
-                >
-                  Login
-                </Link>
-                <Link 
-                  href="/register" 
-                  className={`px-5 py-2 rounded-xl font-bold transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg ${
-                    isScrolled
-                      ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:from-emerald-700 hover:to-teal-700'
-                      : 'bg-white text-emerald-600 hover:bg-emerald-50'
-                  }`}
-                >
-                  Register
-                </Link>
-              </div>
-            )}
-           
-            {/* Mobile Menu Button */}
-            <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className={`lg:hidden p-2 rounded-xl transition-all ${
-                isScrolled ? 'hover:bg-emerald-50' : 'hover:bg-white/20'
-              }`}
-            >
-              {isMobileMenuOpen ? <FaTimes className="text-2xl" /> : <FaBars className="text-2xl" />}
-            </button>
-          </div>
         </div>
 
-        {/* Mobile Menu */}
-        {isMobileMenuOpen && (
-          <div className={`lg:hidden py-4 border-t ${
-            isScrolled ? 'border-gray-200' : 'border-white/20'
-          }`}>
-            <div className="flex flex-col gap-4">
-              <Link 
-                href="/products" 
-                className={`py-2 font-medium transition-colors ${
-                  isScrolled ? 'text-gray-700 hover:text-emerald-600' : 'hover:text-emerald-100'
-                }`}
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Shop
+        {/* Center links */}
+        <div className="flex flex-1 items-center justify-center gap-7 lg:flex-none">
+          {links.map((link) => (
+            <Link key={link.href} href={link.href} className={`hidden lg:inline-block ${linkClass(link.href)}`}>
+              {link.name}
+            </Link>
+          ))}
+        </div>
+
+        {/* Right actions */}
+        <div className="flex items-center justify-end gap-5 lg:flex-1">
+          <ThemeToggle className="hidden lg:inline-flex" />
+
+          <Link href="/cart" className={`inline-flex items-center gap-1.5 ${linkClass('/cart')}`}>
+            Cart
+            {cartCount > 0 && (
+              <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-lime px-1.5 text-[11px] font-bold text-forest">
+                {cartCount}
+              </span>
+            )}
+          </Link>
+
+          {user ? (
+            <div className="hidden items-center gap-5 lg:flex">
+              <Link href="/profile" className={`hidden xl:inline-block ${linkClass('/profile')}`}>
+                {user.name?.split(' ')[0] || 'Profile'}
               </Link>
+              <button
+                onClick={logout}
+                className="rounded-full border border-line px-4 py-2 text-sm font-semibold text-ink transition-colors hover:border-ink"
+              >
+                Log out
+              </button>
+            </div>
+          ) : (
+            <div className="hidden items-center gap-5 lg:flex">
+              <Link href="/login" className={linkClass('/login')}>
+                Log in
+              </Link>
+              <Link
+                href="/register"
+                className="rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-on-primary transition-colors hover:bg-primary-hover"
+              >
+                Sign up
+              </Link>
+            </div>
+          )}
+
+          <button
+            type="button"
+            onClick={() => setMenuPath(isMenuOpen ? null : pathname)}
+            aria-expanded={isMenuOpen}
+            aria-controls="mobile-menu"
+            className="rounded-full border border-line px-3.5 py-1.5 text-sm font-semibold text-ink transition-colors hover:border-ink lg:hidden"
+          >
+            {isMenuOpen ? 'Close' : 'Menu'}
+          </button>
+        </div>
+      </nav>
+
+      {/* Mobile menu */}
+      {isMenuOpen && (
+        <div id="mobile-menu" className="border-t border-line bg-canvas lg:hidden animate-fade-in">
+          <div className={`mx-auto px-5 py-6 ${wide ? 'max-w-[1600px]' : 'max-w-7xl'}`}>
+            <div className="flex flex-col">
+              {links.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`border-b border-line py-4 text-2xl font-semibold tracking-tight transition-colors ${
+                    isActive(link.href) ? 'text-ink' : 'text-ink-muted hover:text-ink'
+                  }`}
+                >
+                  {link.name}
+                </Link>
+              ))}
               {user && (
+                <Link
+                  href="/profile"
+                  className={`border-b border-line py-4 text-2xl font-semibold tracking-tight transition-colors ${
+                    isActive('/profile') ? 'text-ink' : 'text-ink-muted hover:text-ink'
+                  }`}
+                >
+                  Profile
+                </Link>
+              )}
+            </div>
+
+            <div className="mt-6 flex items-center justify-between">
+              <span className="text-sm text-ink-muted">Appearance</span>
+              <ThemeToggle />
+            </div>
+
+            <div className="mt-6 grid grid-cols-2 gap-3">
+              {user ? (
+                <button
+                  onClick={logout}
+                  className="col-span-2 rounded-full border border-line py-3 text-sm font-semibold text-ink"
+                >
+                  Log out
+                </button>
+              ) : (
                 <>
-                  <Link 
-                    href="/dashboard" 
-                    className={`py-2 font-medium transition-colors ${
-                      isScrolled ? 'text-gray-700 hover:text-emerald-600' : 'hover:text-emerald-100'
-                    }`}
-                    onClick={() => setIsMobileMenuOpen(false)}
+                  <Link
+                    href="/login"
+                    className="rounded-full border border-line py-3 text-center text-sm font-semibold text-ink"
                   >
-                    Dashboard
+                    Log in
                   </Link>
-                  <Link 
-                    href="/pantry" 
-                    className={`py-2 font-medium transition-colors ${
-                      isScrolled ? 'text-gray-700 hover:text-emerald-600' : 'hover:text-emerald-100'
-                    }`}
-                    onClick={() => setIsMobileMenuOpen(false)}
+                  <Link
+                    href="/register"
+                    className="rounded-full bg-primary py-3 text-center text-sm font-semibold text-on-primary"
                   >
-                    My Pantry
-                  </Link>
-                  <Link 
-                    href="/subscription" 
-                    className={`py-2 font-medium transition-colors ${
-                      isScrolled ? 'text-gray-700 hover:text-emerald-600' : 'hover:text-emerald-100'
-                    }`}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    Subscriptions
+                    Sign up
                   </Link>
                 </>
               )}
-              
-              <div className="pt-4 border-t border-white/20 flex flex-col gap-3">
-                {user ? (
-                  <>
-                    <div className={`px-4 py-2 rounded-xl ${
-                      isScrolled ? 'bg-emerald-50 text-emerald-700' : 'bg-white/20'
-                    }`}>
-                      <span className="font-medium">{user.name}</span>
-                    </div>
-                    <button 
-                      onClick={() => {
-                        logout();
-                        setIsMobileMenuOpen(false);
-                      }}
-                      className="px-5 py-3 rounded-xl font-medium bg-white text-emerald-600 hover:bg-emerald-50 transition-all"
-                    >
-                      Logout
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <Link 
-                      href="/login" 
-                      className="px-5 py-3 rounded-xl font-medium text-center hover:bg-white/20 transition-all"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      Login
-                    </Link>
-                    <Link 
-                      href="/register" 
-                      className="px-5 py-3 rounded-xl font-bold text-center bg-white text-emerald-600 hover:bg-emerald-50 transition-all"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      Register
-                    </Link>
-                  </>
-                )}
-              </div>
             </div>
           </div>
-        )}
-      </div>
-    </nav>
+        </div>
+      )}
+    </header>
   );
 }

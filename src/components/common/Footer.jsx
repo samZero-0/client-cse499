@@ -1,170 +1,94 @@
 import Link from 'next/link';
-import { FaHeart, FaLeaf, FaFacebook, FaTwitter, FaInstagram, FaLinkedin, FaEnvelope, FaPhone, FaMapMarkerAlt } from 'react-icons/fa';
+
+const columns = [
+  {
+    title: 'Shop',
+    links: [
+      { name: 'All products', href: '/products' },
+      { name: 'Subscriptions', href: '/subscription' },
+      { name: 'Cart', href: '/cart' },
+    ],
+  },
+  {
+    title: 'Account',
+    links: [
+      { name: 'Dashboard', href: '/dashboard' },
+      { name: 'My pantry', href: '/pantry' },
+      { name: 'Profile', href: '/profile' },
+    ],
+  },
+];
+
+// Store terms, kept in sync with the server's pricing rules
+const terms = ['Free delivery on orders over ৳500', 'Cash on delivery', '15% off every subscription delivery'];
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-gray-300 mt-auto">
-      {/* Main Footer Content */}
-      <div className="container mx-auto px-4 py-16">
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-12">
-          {/* Brand Section */}
-          <div className="space-y-6">
-            <div className="flex items-center gap-3 group">
-              <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center transform group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg">
-                <FaLeaf className="text-white text-xl"/>
-              </div>
-              <span className="text-2xl font-bold bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
-                PantryPal
-              </span>
-            </div>
-            <p className="text-gray-400 leading-relaxed">
-              Your smart grocery companion. Reducing food waste and helping families shop smarter, one pantry at a time.
+    <footer className="mt-auto bg-forest text-[#DDE2CC] dark:bg-surface dark:text-ink-muted dark:border-t dark:border-line">
+      <div className="mx-auto max-w-7xl px-5 pt-20 pb-10 lg:px-8">
+        <div className="grid gap-14 lg:grid-cols-12">
+          {/* Brand */}
+          <div className="lg:col-span-5">
+            <p className="max-w-sm text-2xl font-semibold leading-snug tracking-tight text-[#F6F7EF] dark:text-ink">
+              Groceries that fit your week, and a pantry that wastes nothing.
             </p>
-            <div className="flex gap-4">
-              {[
-                { icon: FaFacebook, href: '#', color: 'hover:text-blue-400' },
-                { icon: FaTwitter, href: '#', color: 'hover:text-sky-400' },
-                { icon: FaInstagram, href: '#', color: 'hover:text-pink-400' },
-                { icon: FaLinkedin, href: '#', color: 'hover:text-blue-500' },
-              ].map((social, index) => (
-                <a
-                  key={index}
-                  href={social.href}
-                  className={`w-10 h-10 rounded-lg bg-gray-800 flex items-center justify-center ${social.color} transition-all duration-300 transform hover:scale-110 hover:shadow-lg`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <social.icon className="text-xl" />
-                </a>
-              ))}
-            </div>
-          </div>
-
-          {/* Quick Links */}
-          <div>
-            <h3 className="text-white font-bold text-lg mb-6 flex items-center gap-2">
-              <span className="w-1 h-6 bg-gradient-to-b from-emerald-500 to-teal-500 rounded-full"></span>
-              Quick Links
-            </h3>
-            <ul className="space-y-3">
-              {[
-                { name: 'Shop Products', href: '/products' },
-                { name: 'My Pantry', href: '/pantry' },
-                { name: 'Subscriptions', href: '/subscription' },
-                { name: 'Dashboard', href: '/dashboard' },
-              ].map((link, index) => (
-                <li key={index}>
-                  <Link 
-                    href={link.href} 
-                    className="text-gray-400 hover:text-emerald-400 transition-colors duration-300 flex items-center gap-2 group"
-                  >
-                    <span className="w-0 group-hover:w-2 h-0.5 bg-emerald-400 transition-all duration-300"></span>
-                    {link.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Support */}
-          <div>
-            <h3 className="text-white font-bold text-lg mb-6 flex items-center gap-2">
-              <span className="w-1 h-6 bg-gradient-to-b from-emerald-500 to-teal-500 rounded-full"></span>
-              Support
-            </h3>
-            <ul className="space-y-3">
-              {[
-                { name: 'Help Center', href: '#' },
-                { name: 'FAQs', href: '#' },
-                { name: 'Shipping Info', href: '#' },
-                { name: 'Returns', href: '#' },
-                { name: 'Contact Us', href: '#' },
-              ].map((link, index) => (
-                <li key={index}>
-                  <Link 
-                    href={link.href} 
-                    className="text-gray-400 hover:text-emerald-400 transition-colors duration-300 flex items-center gap-2 group"
-                  >
-                    <span className="w-0 group-hover:w-2 h-0.5 bg-emerald-400 transition-all duration-300"></span>
-                    {link.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Contact Info */}
-          <div>
-            <h3 className="text-white font-bold text-lg mb-6 flex items-center gap-2">
-              <span className="w-1 h-6 bg-gradient-to-b from-emerald-500 to-teal-500 rounded-full"></span>
-              Get in Touch
-            </h3>
-            <ul className="space-y-4">
-              <li className="flex items-start gap-3 text-gray-400 hover:text-emerald-400 transition-colors duration-300 group">
-                <FaMapMarkerAlt className="text-emerald-500 mt-1 group-hover:scale-110 transition-transform" />
-                <span>123 Grocery Lane,<br />Fresh City, FC 12345</span>
-              </li>
-              <li className="flex items-center gap-3 text-gray-400 hover:text-emerald-400 transition-colors duration-300 group">
-                <FaPhone className="text-emerald-500 group-hover:scale-110 transition-transform" />
-                <a href="tel:+1234567890">+1 (234) 567-890</a>
-              </li>
-              <li className="flex items-center gap-3 text-gray-400 hover:text-emerald-400 transition-colors duration-300 group">
-                <FaEnvelope className="text-emerald-500 group-hover:scale-110 transition-transform" />
-                <a href="mailto:hello@pantrypal.com">hello@pantrypal.com</a>
-              </li>
-            </ul>
-          </div>
-        </div>
-
-        {/* Newsletter Section */}
-        <div className="mt-16 pt-12 border-t border-gray-700">
-          <div className="max-w-2xl mx-auto text-center">
-            <h3 className="text-white font-bold text-2xl mb-4">
-              Stay Updated with Fresh Deals 🎉
-            </h3>
-            <p className="text-gray-400 mb-6">
-              Subscribe to our newsletter and get exclusive offers and updates delivered to your inbox.
-            </p>
-            <form className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
-              <input
-                type="email"
-                placeholder="Enter your email"
-                className="flex-1 px-6 py-3 rounded-xl bg-gray-800 border border-gray-700 text-gray-100 placeholder-gray-500 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all"
-              />
-              <button
-                type="submit"
-                className="px-8 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+            <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
+              <Link
+                href="/register"
+                className="rounded-full bg-lime px-6 py-3 text-sm font-semibold text-forest transition-opacity hover:opacity-90"
               >
-                Subscribe
-              </button>
-            </form>
-          </div>
-        </div>
-      </div>
-
-      {/* Bottom Bar */}
-      <div className="border-t border-gray-700 bg-gray-900/50">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-gray-400 text-sm flex items-center gap-2 flex-wrap justify-center">
-              <span>Made with</span>
-              <FaHeart className="text-red-500 animate-pulse" />
-              <span>for a sustainable future</span>
-            </p>
-            <p className="text-gray-500 text-sm">
-              © {currentYear} PantryPal. All rights reserved.
-            </p>
-            <div className="flex gap-6 text-sm">
-              <Link href="#" className="text-gray-400 hover:text-emerald-400 transition-colors">
-                Privacy Policy
+                Create an account
               </Link>
-              <Link href="#" className="text-gray-400 hover:text-emerald-400 transition-colors">
-                Terms of Service
+              <Link
+                href="/products"
+                className="text-sm font-semibold underline decoration-lime/60 decoration-2 underline-offset-4 hover:decoration-lime dark:decoration-olive"
+              >
+                Shop groceries
               </Link>
             </div>
           </div>
+
+          {/* Link columns */}
+          <div className="grid grid-cols-2 gap-10 sm:grid-cols-3 lg:col-span-6 lg:col-start-7">
+            {columns.map((column) => (
+              <div key={column.title}>
+                <h3 className="text-xs font-semibold uppercase tracking-[0.16em] text-olive">{column.title}</h3>
+                <ul className="mt-5 space-y-3">
+                  {column.links.map((link) => (
+                    <li key={link.name}>
+                      <Link href={link.href} className="text-sm transition-colors hover:text-lime dark:hover:text-ink">
+                        {link.name}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+            <div>
+              <h3 className="text-xs font-semibold uppercase tracking-[0.16em] text-olive">Good to know</h3>
+              <ul className="mt-5 space-y-3 text-sm">
+                {terms.map((term) => (
+                  <li key={term}>{term}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        {/* Wordmark */}
+        <div
+          aria-hidden="true"
+          className="mt-20 select-none pb-[0.14em] text-[18vw] font-extrabold leading-[0.8] tracking-[-0.06em] text-white/[0.06] lg:text-[13rem] dark:text-ink/[0.05]"
+        >
+          PantryPal
+        </div>
+
+        {/* Bottom bar */}
+        <div className="mt-8 flex flex-col gap-4 border-t border-white/10 pt-8 text-sm md:flex-row md:items-center md:justify-between dark:border-line">
+          <p>&copy; {currentYear} PantryPal. All rights reserved.</p>
+          <p>Shop, track your pantry and manage deliveries in one place.</p>
         </div>
       </div>
     </footer>

@@ -1,506 +1,387 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
+import toast from 'react-hot-toast';
 import Navbar from '@/components/common/Navbar';
+import PageBanner from '@/components/common/PageBanner';
+import SignInPrompt from '@/components/common/SignInPrompt';
 import BundleBuilder from '@/components/subscription/BundleBuilder';
 import useAxios from '@/hooks/useAxios';
-import { 
-  FaBox, FaCalendarAlt, FaShippingFast, FaClock, FaCheckCircle, 
-  FaStar, FaPercent, FaGift, FaSearch, FaPlus, FaTags, FaFire,
-  FaChevronLeft, FaChevronRight, FaArrowLeft, FaArrowRight
-} from 'react-icons/fa';
-import toast, { Toaster } from 'react-hot-toast';
+import { AuthContext } from '@/context/AuthContext';
+import { apiError } from '@/utils/pricing';
+import { DATA_CHANGED_EVENT } from '@/components/ai/ChatBot';
+
+const PLACEHOLDER = 'https://placehold.co/400x400/EDF0DC/5A6558?text=PantryPal';
+const frequencies = ['Weekly', 'Bi-Weekly', 'Monthly'];
+const PRODUCTS_PER_PAGE = 12;
+
+const benefits = [
+  { title: 'Save 15%', text: 'On every subscription delivery' },
+  { title: 'Free delivery', text: 'On every subscription delivery' },
+  { title: 'Skip or pause', text: 'Whenever you need to' },
+];
+
+// Comparable snapshot of what is saved, used to detect unsaved changes
+const snapshot = (items, frequency) =>
+  JSON.stringify({ frequency, items: items.map((i) => [i._id, i.quantity]) });
 
 export default function SubscriptionPage() {
-  const [activeBundle, setActiveBundle] = useState([]);
+  const { user, loading: authLoading } = useContext(AuthContext);
+  const [bundle, setBundle] = useState([]);
   const [availableProducts, setAvailableProducts] = useState([]);
   const [frequency, setFrequency] = useState('Monthly');
   const [nextDelivery, setNextDelivery] = useState(null);
+  const [status, setStatus] = useState('active');
+  const [hasSubscription, setHasSubscription] = useState(false);
+  const [savedSnapshot, setSavedSnapshot] = useState(snapshot([], 'Monthly'));
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [sliderIndex, setSliderIndex] = useState(0);
-  const productsPerPage = 9;
   const axios = useAxios();
 
-  // --- 1. CRITICAL: AUTO-FETCH DATA ON LOAD ---
-  const fetchData = async () => {
-      setLoading(true);
-      try {
-          // A. Get All Products (for the picker list)
-          const prodRes = await axios.get('/products');
-          setAvailableProducts(prodRes.data);
-
-          // B. Get User's Active Subscription
-          try {
-              const subRes = await axios.get('/subscription');
-              
-              if (subRes.data && subRes.data.items) {
-                  // Map backend data to frontend structure
-                  // We handle cases where 'product' is populated (object) or just an ID string
-                  const formattedItems = subRes.data.items.map(i => {
-                      const productObj = i.product || {};
-                      return {
-                          _id: productObj._id || i._id,
-                          name: productObj.name || i.name || 'Unknown Item',
-                          price: productObj.price || i.price || 0,
-                          imageUrl: productObj.imageUrl || '', // Now we have the image!
-                          quantity: i.quantity
-                      };
-                  });
-                  
-                  setActiveBundle(formattedItems);
-                  setFrequency(subRes.data.frequency || 'Monthly');
-                  setNextDelivery(subRes.data.nextDeliveryDate);
-                  console.log("Subscription Synced:", formattedItems);
-              }
-          } catch (err) {
-              console.log("No active subscription found (User hasn't subscribed yet).");
-              setActiveBundle([]); // Reset if 404
-          }
-      } catch (error) {
-          console.error("Error fetching page data:", error);
-          toast.error("Failed to load subscription data");
-      } finally {
-          setLoading(false);
-      }
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, []); // Runs once when page mounts
-
-  // --- 2. HANDLERS ---
-
-  // Add Item to Local State
-  const addToBundle = (product) => {
-    let itemExists = false;
-    setActiveBundle(prev => {
-        const exists = prev.find(item => item._id === product._id);
-        if (exists) {
-            itemExists = true;
-            return prev;
-        }
-        return [...prev, { ...product, quantity: 1 }];
+  // Mirror a subscription returned by the server into page state
+  const applySubscription = (sub) => {
+    const formattedItems = sub.items.map((i) => {
+      const productObj = i.product || {};
+      return {
+        _id: productObj._id || i._id,
+        name: productObj.name || i.name || 'Unknown item',
+        price: productObj.price ?? i.price ?? 0,
+        imageUrl: productObj.imageUrl || '',
+        quantity: i.quantity,
+      };
     });
-
-    if (itemExists) toast.error(`${product.name} is already in your bundle!`);
-    else toast.success(`${product.name} added to bundle! 🎉`);
+    const savedFrequency = sub.frequency || 'Monthly';
+    setBundle(formattedItems);
+    setFrequency(savedFrequency);
+    setNextDelivery(sub.nextDeliveryDate);
+    setStatus(sub.status || 'active');
+    setHasSubscription(formattedItems.length > 0);
+    setSavedSnapshot(snapshot(formattedItems, savedFrequency));
   };
 
-  // Save Changes to Backend
- // Save Changes to Backend
-  const handleSave = async (newItems) => {
+  const fetchData = async () => {
     try {
-        // FIX: Include 'price' and 'name' because the Mongoose Schema requires them!
-        const backendItems = newItems.map(item => ({
-            product: item._id, 
-            name: item.name,      // Added
-            quantity: item.quantity,
-            price: item.price     // Added (Crucial fix)
-        }));
+      const prodRes = await axios.get('/products');
+      setAvailableProducts(prodRes.data);
 
-        const payload = { items: backendItems, frequency };
-        
-        // Debugging: Check console to ensure price is now present
-        console.log("Sending Payload:", payload);
-
-        await axios.post('/subscription', payload);
-        
-        // Re-fetch to ensure we have the cleanest data (and images) from DB
-        await fetchData(); 
-        toast.success('Subscription updated successfully! ✅');
+      try {
+        const subRes = await axios.get('/subscription');
+        if (subRes.data && subRes.data.items) {
+          applySubscription(subRes.data);
+        }
+      } catch {
+        // 404 = the user has not subscribed yet
+        setBundle([]);
+        setHasSubscription(false);
+      }
     } catch (error) {
-        toast.error('Error saving subscription. Please try again.');
-        console.error("Save Error:", error.response?.data?.message || error.message);
+      console.error('Error fetching page data:', error);
+      toast.error('Failed to load subscription data');
+    } finally {
+      setLoading(false);
     }
   };
 
-  // --- 3. UI HELPERS (Filters, Pagination, Slider) ---
-  const categories = ['All', 'Dairy', 'Vegetables', 'Fruits', 'Staples', 'Protein'];
-  const filteredProducts = availableProducts.filter(product => {
+  useEffect(() => {
+    if (user) fetchData();
+  }, [user]);
+
+  // The assistant can add items to the subscription; reload when it does
+  useEffect(() => {
+    const reload = () => user && fetchData();
+    window.addEventListener(DATA_CHANGED_EVENT, reload);
+    return () => window.removeEventListener(DATA_CHANGED_EVENT, reload);
+  }, [user]);
+
+  const addToBundle = (product) => {
+    if (bundle.some((item) => item._id === product._id)) {
+      toast.error(`${product.name} is already in your bundle`);
+      return;
+    }
+    setBundle([...bundle, { ...product, quantity: 1 }]);
+    toast.success(`${product.name} added to your bundle`);
+  };
+
+  const handleSave = async (items) => {
+    setSaving(true);
+    try {
+      // The schema requires name and price on each item
+      const backendItems = items.map((item) => ({
+        product: item._id,
+        name: item.name,
+        quantity: item.quantity,
+        price: item.price,
+      }));
+      const { data } = await axios.post('/subscription', { items: backendItems, frequency });
+      applySubscription(data);
+      toast.success(items.length ? 'Subscription saved' : 'Subscription emptied. No more deliveries until you add items.');
+    } catch (error) {
+      toast.error(apiError(error, 'Could not save your subscription. Please try again.'));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSkip = async () => {
+    try {
+      const { data } = await axios.post('/subscription/skip');
+      setNextDelivery(data.nextDeliveryDate);
+      toast.success(`Skipped. Next delivery: ${new Date(data.nextDeliveryDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`);
+    } catch (error) {
+      toast.error(apiError(error, 'Could not skip the delivery'));
+    }
+  };
+
+  const handleStatus = async (nextStatus) => {
+    try {
+      const { data } = await axios.put('/subscription/status', { status: nextStatus });
+      setStatus(data.status);
+      setNextDelivery(data.nextDeliveryDate);
+      toast.success(nextStatus === 'paused' ? 'Deliveries paused' : 'Deliveries resumed');
+    } catch (error) {
+      toast.error(apiError(error, 'Could not update your subscription'));
+    }
+  };
+
+  const changeSearch = (value) => {
+    setSearchTerm(value);
+    setCurrentPage(1);
+  };
+  const changeCategory = (value) => {
+    setSelectedCategory(value);
+    setCurrentPage(1);
+  };
+
+  const categories = ['All', ...[...new Set(availableProducts.map((p) => p.category))].sort()];
+  const filteredProducts = availableProducts.filter((product) => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'All' || product.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
+  const totalPages = Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE);
+  const startIndex = (currentPage - 1) * PRODUCTS_PER_PAGE;
+  const currentProducts = filteredProducts.slice(startIndex, startIndex + PRODUCTS_PER_PAGE);
 
-  const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
-  const startIndex = (currentPage - 1) * productsPerPage;
-  const currentProducts = filteredProducts.slice(startIndex, startIndex + productsPerPage);
-
-  const featuredProducts = availableProducts.slice(0, 6);
-  const visibleSlides = 3;
-  const maxSliderIndex = Math.max(0, featuredProducts.length - visibleSlides);
-
-  const nextSlide = () => setSliderIndex(prev => Math.min(prev + 1, maxSliderIndex));
-  const prevSlide = () => setSliderIndex(prev => Math.max(prev - 1, 0));
-
-  // Reset page on filter change
-  useEffect(() => { setCurrentPage(1); }, [searchTerm, selectedCategory]);
-
-  const totalValue = activeBundle.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  const savings = Math.round(totalValue * 0.15); // 15% Savings
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex flex-col">
-        <Navbar />
-        <div className="flex-grow flex items-center justify-center">
-          <div className="text-center">
-            <div className="w-16 h-16 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-gray-600 text-lg">Loading your subscription...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const dirty = snapshot(bundle, frequency) !== savedSnapshot;
+  const showSignIn = !authLoading && !user;
+  const isLoading = !showSignIn && (authLoading || loading);
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-gray-50 via-gray-100 to-gray-50">
-      <Navbar />
-      <Toaster position="top-right" />
-      
-      <div className="container mx-auto px-4 py-8 flex-grow">
-        
-        {/* Hero Header */}
-        <div className="mb-8">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <div className="flex min-h-screen flex-col bg-canvas">
+      <Navbar wide />
+
+      <main className="mx-auto w-full max-w-[1600px] flex-grow px-5 pb-16 pt-4 lg:px-8 lg:pt-6">
+        <PageBanner
+          eyebrow="Subscriptions"
+          title="Essentials on repeat."
+          description="Build a bundle once and it arrives on your schedule. Skip, swap or change it any time."
+          image="/images/produce-baskets.jpg"
+        >
+          {!showSignIn && (
             <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent mb-2">
-                Subscription Manager 📦
-              </h1>
-              <p className="text-gray-600 text-lg">Never run out of essentials. Save time and money with recurring deliveries.</p>
-            </div>
-            
-            {/* Frequency Selector */}
-            <div className="flex items-center gap-3 bg-white px-6 py-3 rounded-xl border-2 border-gray-200 shadow-sm hover:shadow-md transition-all">
-              <FaClock className="text-emerald-600 text-xl" />
-              <div>
-                <label className="text-xs text-gray-500 block">Delivery Frequency</label>
-                <select 
-                  value={frequency}
-                  onChange={(e) => setFrequency(e.target.value)}
-                  className="bg-transparent border-none focus:ring-0 text-emerald-600 font-bold cursor-pointer outline-none text-lg p-0"
-                >
-                  <option>Weekly</option>
-                  <option>Bi-Weekly</option>
-                  <option>Monthly</option>
-                </select>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Benefits Banner */}
-        <div className="grid md:grid-cols-3 gap-4 mb-8">
-          <BenefitCard 
-            icon={<FaPercent />}
-            title="Save 15%"
-            description="On all subscription orders"
-            gradient="from-green-500 to-emerald-500"
-          />
-          <BenefitCard 
-            icon={<FaShippingFast />}
-            title="Free Delivery"
-            description="No shipping charges ever"
-            gradient="from-blue-500 to-cyan-500"
-          />
-          <BenefitCard 
-            icon={<FaGift />}
-            title="Exclusive Perks"
-            description="Early access to new products"
-            gradient="from-purple-500 to-pink-500"
-          />
-        </div>
-
-        {/* Main Grid Layout */}
-        <div className="grid lg:grid-cols-3 gap-8">
-            
-          {/* Left Column: Bundle Builder & Item Picker */}
-          <div className="lg:col-span-2 space-y-8">
-            
-            {/* Bundle Builder Component */}
-            <BundleBuilder 
-              initialItems={activeBundle} 
-              onSave={handleSave}
-              savings={savings}
-            />
-
-            {/* Featured Products Slider */}
-            <div className="bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl shadow-lg overflow-hidden mb-8">
-              <div className="p-6 text-white">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <h3 className="text-2xl font-bold flex items-center gap-2">
-                      <FaStar className="text-yellow-300" />
-                      Featured Picks
-                    </h3>
-                    <p className="text-purple-100 text-sm">Popular items perfect for subscription</p>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={prevSlide}
-                      disabled={sliderIndex === 0}
-                      className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center hover:bg-white/30 transition-all disabled:opacity-50"
-                    >
-                      <FaChevronLeft />
-                    </button>
-                    <button
-                      onClick={nextSlide}
-                      disabled={sliderIndex >= maxSliderIndex}
-                      className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center hover:bg-white/30 transition-all disabled:opacity-50"
-                    >
-                      <FaChevronRight />
-                    </button>
-                  </div>
-                </div>
-                <div className="overflow-hidden">
-                  <div 
-                    className="flex gap-4 transition-transform duration-500 ease-in-out"
-                    style={{ transform: `translateX(-${sliderIndex * (100 / visibleSlides)}%)` }}
+              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#D5DAC6]">Deliver every</p>
+              <div role="group" aria-label="Delivery frequency" className="inline-flex rounded-full bg-white/10 p-1 backdrop-blur">
+                {frequencies.map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    onClick={() => setFrequency(option)}
+                    aria-pressed={frequency === option}
+                    className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
+                      frequency === option ? 'bg-lime text-forest' : 'text-[#F6F7EF] hover:bg-white/10'
+                    }`}
                   >
-                    {featuredProducts.map(product => (
-                      <div 
-                        key={product._id}
-                        className="min-w-[calc(33.333%-0.67rem)] bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20 hover:bg-white/20 transition-all cursor-pointer"
-                        onClick={() => addToBundle(product)}
-                      >
-                        <div className="aspect-square bg-white/20 rounded-lg mb-3 overflow-hidden">
-                          <img 
-                            src={product.imageUrl || 'https://placehold.co/200x200?text=Product'}
-                            alt={product.name}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                        <h4 className="font-bold text-white mb-1 line-clamp-1">{product.name}</h4>
-                        <p className="text-yellow-300 font-bold mb-2">৳{product.price}</p>
-                        <button className="w-full py-2 bg-white text-purple-600 rounded-lg font-semibold text-sm hover:bg-purple-50 flex items-center justify-center gap-2">
-                          <FaPlus /> Quick Add
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                    {option === 'Bi-Weekly' ? '2 weeks' : option === 'Weekly' ? 'Week' : 'Month'}
+                  </button>
+                ))}
               </div>
             </div>
+          )}
+        </PageBanner>
 
-            {/* Add Items Section */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-              <div className="bg-gradient-to-r from-emerald-600 to-teal-600 p-6 text-white">
-                <h3 className="text-2xl font-bold mb-2 flex items-center gap-2">
-                  <FaBox /> Add Items to Bundle
-                </h3>
-                <p className="text-emerald-50">Browse and select products for your subscription</p>
-              </div>
-
-              {/* Search & Filter */}
-              <div className="p-6 border-b border-gray-200 space-y-4">
-                <div className="relative">
-                  <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="Search products..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  />
+        {showSignIn ? (
+          <SignInPrompt
+            title="Log in to manage subscriptions."
+            description="Set up a recurring bundle of your essentials and save 15% on every delivery."
+          />
+        ) : (
+          <>
+            {/* Benefits */}
+            <div className="mt-6 grid border-y border-line sm:grid-cols-3">
+              {benefits.map((benefit, index) => (
+                <div
+                  key={benefit.title}
+                  className={`py-5 sm:px-6 sm:text-center ${index > 0 ? 'border-t border-line sm:border-l sm:border-t-0' : ''}`}
+                >
+                  <p className="text-sm font-semibold text-ink">{benefit.title}</p>
+                  <p className="mt-0.5 text-sm text-ink-muted">{benefit.text}</p>
                 </div>
-                <div className="flex flex-wrap gap-2">
+              ))}
+            </div>
+
+            <div className="mt-10 grid gap-8 lg:grid-cols-12 xl:gap-10">
+              {/* Product picker */}
+              <section className="lg:col-span-8">
+                <div className="flex flex-col gap-4 border-b border-line pb-5 md:flex-row md:items-end md:justify-between">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent">Add to your bundle</p>
+                    <h2 className="mt-2 text-2xl font-extrabold tracking-tight text-ink">Pick your essentials</h2>
+                  </div>
+                  <div className="w-full md:w-72">
+                    <label htmlFor="bundle-search" className="sr-only">
+                      Search products
+                    </label>
+                    <input
+                      id="bundle-search"
+                      type="search"
+                      placeholder="Search products..."
+                      value={searchTerm}
+                      onChange={(e) => changeSearch(e.target.value)}
+                      className="w-full rounded-full border border-line bg-surface px-5 py-2.5 text-sm text-ink placeholder:text-ink-muted focus:border-olive focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="-mx-5 mt-5 flex gap-2 overflow-x-auto px-5 [scrollbar-width:none] md:mx-0 md:flex-wrap md:px-0">
                   {categories.map((cat) => (
                     <button
                       key={cat}
-                      onClick={() => setSelectedCategory(cat)}
-                      className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                      type="button"
+                      onClick={() => changeCategory(cat)}
+                      aria-pressed={selectedCategory === cat}
+                      className={`shrink-0 rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
                         selectedCategory === cat
-                          ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          ? 'border-primary bg-primary text-on-primary'
+                          : 'border-line bg-surface text-ink-muted hover:text-ink'
                       }`}
                     >
                       {cat}
                     </button>
                   ))}
                 </div>
-              </div>
 
-              {/* Products Grid */}
-              <div className="p-6">
-                {filteredProducts.length === 0 ? (
-                  <div className="text-center py-12">
-                    <div className="text-6xl mb-4">📦</div>
-                    <p className="text-gray-500">No products found</p>
-                  </div>
-                ) : (
-                  <>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
-                      {currentProducts.map(product => (
-                        <ProductCard 
-                          key={product._id}
-                          product={product}
-                          onAdd={() => addToBundle(product)}
-                          isInBundle={activeBundle.some(item => item._id === product._id)}
-                        />
+                <div className="mt-6">
+                  {isLoading ? (
+                    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
+                      {Array.from({ length: 8 }).map((_, i) => (
+                        <div key={i} className="overflow-hidden rounded-[1.25rem] border border-line bg-surface">
+                          <div className="aspect-square animate-pulse bg-surface-muted" />
+                          <div className="space-y-2 p-4">
+                            <div className="h-4 w-3/4 animate-pulse rounded-full bg-surface-muted" />
+                            <div className="h-8 w-full animate-pulse rounded-full bg-surface-muted" />
+                          </div>
+                        </div>
                       ))}
                     </div>
-
-                    {/* Pagination */}
-                    {totalPages > 1 && (
-                      <div className="flex items-center justify-between pt-6 border-t border-gray-200">
-                        <button
-                          onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                          disabled={currentPage === 1}
-                          className="px-4 py-2 bg-gray-100 rounded-lg disabled:opacity-50 flex items-center gap-2"
-                        >
-                          <FaArrowLeft /> Previous
-                        </button>
-                        <span className="text-gray-600">Page {currentPage} of {totalPages}</span>
-                        <button
-                          onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                          disabled={currentPage === totalPages}
-                          className="px-4 py-2 bg-gray-100 rounded-lg disabled:opacity-50 flex items-center gap-2"
-                        >
-                          Next <FaArrowRight />
-                        </button>
+                  ) : filteredProducts.length === 0 ? (
+                    <div className="rounded-[2rem] border border-dashed border-line px-6 py-16 text-center">
+                      <p className="text-xl font-extrabold tracking-tight text-ink">No products found</p>
+                      <p className="mt-2 text-ink-muted">Try another search or category.</p>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
+                        {currentProducts.map((product) => (
+                          <PickerCard
+                            key={product._id}
+                            product={product}
+                            onAdd={() => addToBundle(product)}
+                            isInBundle={bundle.some((item) => item._id === product._id)}
+                          />
+                        ))}
                       </div>
-                    )}
-                  </>
-                )}
-              </div>
-            </div>
-          </div>
-          
-          {/* Right Column: Status & Info Cards */}
-          <div className="space-y-6">
-            
-            {/* Subscription Status Card */}
-            <div className="bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-600 text-white rounded-2xl shadow-xl overflow-hidden sticky top-24">
-              <div className="p-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
-                    <FaCheckCircle className="text-2xl" />
-                  </div>
-                  <h3 className="font-bold text-xl">Subscription Status</h3>
-                </div>
 
-                <div className="space-y-4">
-                  <StatusItem 
-                    icon={<FaCalendarAlt />}
-                    label="Next Delivery"
-                    value={nextDelivery ? new Date(nextDelivery).toLocaleDateString('en-US', { 
-                      month: 'short', day: 'numeric', year: 'numeric'
-                    }) : 'Not Set'}
-                  />
-                  <StatusItem 
-                    icon={<FaClock />}
-                    label="Frequency"
-                    value={frequency}
-                  />
-                  <StatusItem 
-                    icon={<FaBox />}
-                    label="Total Items"
-                    value={activeBundle.length}
-                  />
-                  <StatusItem 
-                    icon={<FaPercent />}
-                    label="Savings"
-                    value={`৳${savings}`}
+                      {totalPages > 1 && (
+                        <div className="mt-8 flex items-center justify-between border-t border-line pt-6">
+                          <button
+                            type="button"
+                            onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                            disabled={currentPage === 1}
+                            className="rounded-full border border-line px-4 py-2 text-sm font-semibold text-ink transition-colors hover:border-ink disabled:cursor-not-allowed disabled:opacity-40"
+                          >
+                            Previous
+                          </button>
+                          <span className="text-sm text-ink-muted tabular-nums">
+                            Page {currentPage} of {totalPages}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+                            disabled={currentPage === totalPages}
+                            className="rounded-full border border-line px-4 py-2 text-sm font-semibold text-ink transition-colors hover:border-ink disabled:cursor-not-allowed disabled:opacity-40"
+                          >
+                            Next
+                          </button>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              </section>
+
+              {/* Bundle */}
+              <aside className="lg:col-span-4">
+                <div className="lg:sticky lg:top-24">
+                  <BundleBuilder
+                    items={bundle}
+                    onChange={setBundle}
+                    onSave={handleSave}
+                    saving={saving}
+                    dirty={dirty}
+                    frequency={frequency}
+                    nextDelivery={nextDelivery}
+                    status={status}
+                    canManage={hasSubscription && !dirty}
+                    onSkip={handleSkip}
+                    onStatusChange={handleStatus}
                   />
                 </div>
-              </div>
-
-              {activeBundle.length > 0 && (
-                <div className="bg-white/10 backdrop-blur-sm p-4 border-t border-white/20">
-                  <div className="flex justify-between text-sm mb-2">
-                    <span>Bundle Progress</span>
-                    <span className="font-semibold">{activeBundle.length} / 10 items</span>
-                  </div>
-                  <div className="w-full bg-white/20 rounded-full h-2">
-                    <div 
-                      className="bg-white h-2 rounded-full transition-all duration-500"
-                      style={{ width: `${Math.min((activeBundle.length / 10) * 100, 100)}%` }}
-                    ></div>
-                  </div>
-                </div>
-              )}
+              </aside>
             </div>
-
-            {/* Promo Card */}
-            <div className="bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl p-6 text-white shadow-lg">
-              <div className="flex items-center gap-2 mb-3">
-                <FaFire className="text-2xl animate-pulse" />
-                <h3 className="font-bold text-xl">Limited Offer!</h3>
-              </div>
-              <p className="text-white/90 mb-4">
-                Subscribe now and get <span className="font-bold text-2xl">15% OFF</span> on your first 3 orders!
-              </p>
-              <div className="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-lg inline-block">
-                <span className="font-mono font-bold">SAVE15</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+          </>
+        )}
+      </main>
     </div>
   );
 }
 
-// --- SUB-COMPONENTS ---
-
-function BenefitCard({ icon, title, description, gradient }) {
+function PickerCard({ product, onAdd, isInBundle }) {
   return (
-    <div className="group bg-white rounded-xl p-6 border border-gray-200 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
-      <div className={`w-12 h-12 bg-gradient-to-br ${gradient} rounded-xl flex items-center justify-center text-white text-2xl mb-4 transform group-hover:scale-110 group-hover:rotate-3 transition-all duration-300`}>
-        {icon}
-      </div>
-      <h3 className="font-bold text-lg text-gray-900 mb-1">{title}</h3>
-      <p className="text-sm text-gray-600">{description}</p>
-    </div>
-  );
-}
-
-function ProductCard({ product, onAdd, isInBundle }) {
-  return (
-    <div className={`group relative bg-white rounded-xl border-2 overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer transform hover:-translate-y-1 ${
-      isInBundle ? 'border-emerald-500 ring-2 ring-emerald-200' : 'border-gray-200 hover:border-emerald-300'
-    }`}>
-      <div className="h-32 bg-gray-100 relative overflow-hidden">
-        <img 
-          src={product.imageUrl || 'https://placehold.co/200x200?text=Product'}
+    <div
+      className={`group flex flex-col overflow-hidden rounded-[1.25rem] border bg-surface transition-all duration-300 ${
+        isInBundle ? 'border-primary ring-1 ring-primary' : 'border-line hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/5'
+      }`}
+    >
+      <div className="relative aspect-square overflow-hidden bg-surface-muted">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={product.imageUrl || PLACEHOLDER}
           alt={product.name}
-          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+          onError={(e) => {
+            if (e.currentTarget.src !== PLACEHOLDER) e.currentTarget.src = PLACEHOLDER;
+          }}
+          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
         />
         {isInBundle && (
-          <div className="absolute top-2 right-2 w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center text-white shadow-lg">
-            <FaCheckCircle />
-          </div>
+          <span className="absolute left-3 top-3 rounded-full bg-lime px-2.5 py-1 text-xs font-bold text-forest">
+            In bundle
+          </span>
         )}
       </div>
-      <div className="p-3">
-        <h4 className="font-semibold text-gray-900 text-sm line-clamp-1 mb-1">{product.name}</h4>
-        <p className="text-emerald-600 font-bold mb-2">৳{product.price}</p>
-        <button 
+      <div className="flex flex-1 flex-col p-4">
+        <p className="line-clamp-1 text-sm font-semibold text-ink">{product.name}</p>
+        <p className="mt-0.5 text-sm text-ink-muted tabular-nums">৳{product.price}</p>
+        <button
+          type="button"
           onClick={onAdd}
           disabled={isInBundle}
-          className={`w-full py-2 rounded-lg font-medium text-sm transition-all flex items-center justify-center gap-2 ${
-            isInBundle 
-              ? 'bg-gray-100 text-gray-500 cursor-not-allowed' 
-              : 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:from-emerald-700 hover:to-teal-700 shadow-md hover:shadow-lg'
-          }`}
+          className="mt-3 rounded-full bg-primary py-2 text-sm font-semibold text-on-primary transition-colors hover:bg-primary-hover disabled:cursor-default disabled:bg-surface-muted disabled:text-ink-muted"
         >
-          {isInBundle ? <><FaCheckCircle /> In Bundle</> : <><FaPlus /> Add to Bundle</>}
+          {isInBundle ? 'Added' : 'Add'}
         </button>
       </div>
-    </div>
-  );
-}
-
-function StatusItem({ icon, label, value }) {
-  return (
-    <div className="flex items-center justify-between p-3 bg-white/10 backdrop-blur-sm rounded-xl">
-      <div className="flex items-center gap-3">
-        <div className="text-xl">{icon}</div>
-        <span className="text-emerald-100 text-sm">{label}</span>
-      </div>
-      <span className="font-bold text-lg">{value}</span>
     </div>
   );
 }

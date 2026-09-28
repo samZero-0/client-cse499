@@ -1,177 +1,118 @@
-import { FaCheck } from 'react-icons/fa';
+import Link from 'next/link';
+import Image from 'next/image';
 
-export default function FilterSidebar({ 
-  categories, 
-  selectedCategory, 
-  onSelectCategory, 
-  priceRange, 
+const extraFilters = [{ key: 'inStock', label: 'In stock only' }];
+
+function SectionTitle({ children }) {
+  return (
+    <h3 className="text-xs font-semibold uppercase tracking-[0.16em] text-accent">{children}</h3>
+  );
+}
+
+export default function FilterSidebar({
+  categories,
+  selectedCategory,
+  onSelectCategory,
+  priceRange,
   onPriceChange,
   selectedFilters,
-  onFilterChange 
+  onFilterChange,
 }) {
   const handleFilterToggle = (filterName) => {
     onFilterChange({
       ...selectedFilters,
-      [filterName]: !selectedFilters[filterName]
+      [filterName]: !selectedFilters[filterName],
     });
   };
 
+  const categoryButton = (value, label) => {
+    const active = selectedCategory === value;
+    return (
+      <li key={value}>
+        <button
+          type="button"
+          onClick={() => onSelectCategory(value)}
+          aria-pressed={active}
+          className={`flex w-full items-center justify-between rounded-xl px-3.5 py-2.5 text-left text-sm font-medium transition-colors ${
+            active ? 'bg-primary text-on-primary' : 'text-ink-muted hover:bg-surface-muted hover:text-ink'
+          }`}
+        >
+          {label}
+        </button>
+      </li>
+    );
+  };
+
   return (
-    <aside className="w-full lg:w-72 space-y-6">
+    <aside className="w-full space-y-8 lg:w-60 xl:w-64">
       {/* Categories */}
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-        <h3 className="font-bold text-gray-900 mb-4 text-lg flex items-center gap-2">
-          <span className="w-1 h-6 bg-gradient-to-b from-emerald-500 to-teal-500 rounded-full"></span>
-          Categories
-        </h3>
-        <ul className="space-y-2">
-          <li>
-            <button 
-              onClick={() => onSelectCategory('All')}
-              className={`w-full text-left px-4 py-3 rounded-xl font-medium transition-all ${
-                selectedCategory === 'All' 
-                  ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md' 
-                  : 'text-gray-700 hover:bg-gray-50'
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <span>All Products</span>
-                {selectedCategory === 'All' && <FaCheck className="text-sm" />}
-              </div>
-            </button>
-          </li>
-          {categories.map((cat) => (
-            <li key={cat}>
-              <button 
-                onClick={() => onSelectCategory(cat)}
-                className={`w-full text-left px-4 py-3 rounded-xl font-medium transition-all ${
-                  selectedCategory === cat 
-                    ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md' 
-                    : 'text-gray-700 hover:bg-gray-50'
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <span>{cat}</span>
-                  {selectedCategory === cat && <FaCheck className="text-sm" />}
-                </div>
-              </button>
-            </li>
-          ))}
+      <div>
+        <SectionTitle>Categories</SectionTitle>
+        <ul className="mt-4 space-y-1">
+          {categoryButton('All', 'All products')}
+          {categories.map((cat) => categoryButton(cat, cat))}
         </ul>
       </div>
 
       {/* Price Range */}
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-        <h3 className="font-bold text-gray-900 mb-4 text-lg flex items-center gap-2">
-          <span className="w-1 h-6 bg-gradient-to-b from-emerald-500 to-teal-500 rounded-full"></span>
-          Price Range
-        </h3>
-        <div className="mb-4">
-          <div className="flex justify-between items-center mb-3">
-            <span className="text-sm text-gray-600">Up to:</span>
-            <span className="text-lg font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
-              ৳{priceRange}
-            </span>
-          </div>
-          <input 
-            type="range" 
-            min="0" 
-            max="5000" 
-            step="100"
-            value={priceRange} 
-            onChange={(e) => onPriceChange(e.target.value)}
-            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-emerald-600 slider"
-          />
-          <div className="flex justify-between text-xs text-gray-500 mt-2">
-            <span>৳0</span>
-            <span>৳5000</span>
-          </div>
+      <div className="border-t border-line pt-8">
+        <div className="flex items-baseline justify-between">
+          <SectionTitle>Max price</SectionTitle>
+          <span className="text-sm font-bold text-ink tabular-nums">৳{priceRange}</span>
+        </div>
+        <input
+          type="range"
+          min="0"
+          max="5000"
+          step="100"
+          value={priceRange}
+          onChange={(e) => onPriceChange(Number(e.target.value))}
+          aria-label="Maximum price"
+          className="mt-5 w-full cursor-pointer accent-primary"
+        />
+        <div className="mt-2 flex justify-between text-xs text-ink-muted tabular-nums">
+          <span>৳0</span>
+          <span>৳5000</span>
         </div>
       </div>
 
       {/* Additional Filters */}
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-        <h3 className="font-bold text-gray-900 mb-4 text-lg flex items-center gap-2">
-          <span className="w-1 h-6 bg-gradient-to-b from-emerald-500 to-teal-500 rounded-full"></span>
-          Filters
-        </h3>
-        <div className="space-y-3">
-          <label className="flex items-center gap-3 cursor-pointer group">
-            <div className="relative">
+      <div className="border-t border-line pt-8">
+        <SectionTitle>Filters</SectionTitle>
+        <div className="mt-4 space-y-3">
+          {extraFilters.map((filter) => (
+            <label key={filter.key} className="flex cursor-pointer items-center gap-3 text-sm font-medium text-ink">
               <input
                 type="checkbox"
-                checked={selectedFilters.inStock}
-                onChange={() => handleFilterToggle('inStock')}
-                className="sr-only"
+                checked={selectedFilters[filter.key]}
+                onChange={() => handleFilterToggle(filter.key)}
+                className="h-4 w-4 cursor-pointer rounded accent-primary"
               />
-              <div className={`w-6 h-6 rounded-lg border-2 transition-all ${
-                selectedFilters.inStock 
-                  ? 'bg-gradient-to-r from-emerald-600 to-teal-600 border-emerald-600' 
-                  : 'border-gray-300 group-hover:border-emerald-400'
-              }`}>
-                {selectedFilters.inStock && (
-                  <FaCheck className="text-white text-xs absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
-                )}
-              </div>
-            </div>
-            <span className="text-gray-700 font-medium">In Stock Only</span>
-          </label>
-
-          <label className="flex items-center gap-3 cursor-pointer group">
-            <div className="relative">
-              <input
-                type="checkbox"
-                checked={selectedFilters.onSale}
-                onChange={() => handleFilterToggle('onSale')}
-                className="sr-only"
-              />
-              <div className={`w-6 h-6 rounded-lg border-2 transition-all ${
-                selectedFilters.onSale 
-                  ? 'bg-gradient-to-r from-emerald-600 to-teal-600 border-emerald-600' 
-                  : 'border-gray-300 group-hover:border-emerald-400'
-              }`}>
-                {selectedFilters.onSale && (
-                  <FaCheck className="text-white text-xs absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
-                )}
-              </div>
-            </div>
-            <span className="text-gray-700 font-medium">On Sale</span>
-          </label>
-
-          <label className="flex items-center gap-3 cursor-pointer group">
-            <div className="relative">
-              <input
-                type="checkbox"
-                checked={selectedFilters.organic}
-                onChange={() => handleFilterToggle('organic')}
-                className="sr-only"
-              />
-              <div className={`w-6 h-6 rounded-lg border-2 transition-all ${
-                selectedFilters.organic 
-                  ? 'bg-gradient-to-r from-emerald-600 to-teal-600 border-emerald-600' 
-                  : 'border-gray-300 group-hover:border-emerald-400'
-              }`}>
-                {selectedFilters.organic && (
-                  <FaCheck className="text-white text-xs absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
-                )}
-              </div>
-            </div>
-            <span className="text-gray-700 font-medium">Organic</span>
-          </label>
+              {filter.label}
+            </label>
+          ))}
         </div>
       </div>
 
-      {/* Special Offers Banner */}
-      <div className="bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-600 p-6 rounded-2xl shadow-lg text-white">
-        <div className="text-3xl mb-3">🎁</div>
-        <h4 className="font-bold text-lg mb-2">Special Offer!</h4>
-        <p className="text-emerald-50 text-sm mb-4">
-          Get 15% off on your first subscription order
+      {/* Offer */}
+      <Link
+        href="/subscription"
+        className="group relative isolate block overflow-hidden rounded-[1.5rem] p-6 text-[#F6F7EF]"
+      >
+        <Image
+          src="/images/feature-subscription.jpg"
+          alt=""
+          fill
+          sizes="256px"
+          className="-z-20 object-cover transition-transform duration-700 group-hover:scale-105"
+        />
+        <div aria-hidden="true" className="absolute inset-0 -z-10 bg-gradient-to-t from-[#1B241E]/95 via-[#1B241E]/70 to-[#1B241E]/30" />
+        <p className="pt-16 text-xs font-semibold uppercase tracking-[0.16em] text-lime">Subscribe and save</p>
+        <p className="mt-2 text-lg font-bold leading-snug">15% off and free delivery on every subscription order</p>
+        <p className="mt-4 text-sm font-semibold underline decoration-lime/60 decoration-2 underline-offset-4 group-hover:decoration-lime">
+          Build a bundle
         </p>
-        <button className="w-full bg-white text-emerald-600 font-bold py-2 px-4 rounded-lg hover:bg-emerald-50 transition-all">
-          Learn More
-        </button>
-      </div>
+      </Link>
     </aside>
   );
 }

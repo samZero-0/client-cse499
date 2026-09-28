@@ -6,6 +6,8 @@ import toast from 'react-hot-toast';
 
 export const AuthContext = createContext();
 
+const storeUser = (user) => localStorage.setItem('user', JSON.stringify(user));
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -13,7 +15,6 @@ export const AuthProvider = ({ children }) => {
   const axios = useAxios();
 
   useEffect(() => {
-    // Check if user is logged in on page load
     const checkUserLoggedIn = async () => {
       const token = localStorage.getItem('token');
       const storedUser = localStorage.getItem('user');
@@ -23,26 +24,27 @@ export const AuthProvider = ({ children }) => {
         return;
       }
 
-      // If we have stored user data, prefer that for instant hydration
+      // Show the stored user instantly, then refresh from the server below
       if (storedUser) {
         try {
           setUser(JSON.parse(storedUser));
           setLoading(false);
-          return;
         } catch (err) {
           console.error('Failed to parse stored user', err);
         }
       }
 
-      // Fallback: try to fetch the current user profile
       try {
-        const { data } = await axios.get('/auth/me');
+        const { data } = await axios.get('/users/profile');
         setUser(data);
-        localStorage.setItem('user', JSON.stringify(data));
+        storeUser(data);
       } catch (err) {
-        console.error('Failed to fetch user profile', err);
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
+        // Expired or invalid token: sign out locally
+        if (err.response?.status === 401) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          setUser(null);
+        }
       } finally {
         setLoading(false);
       }
@@ -50,43 +52,41 @@ export const AuthProvider = ({ children }) => {
     checkUserLoggedIn();
   }, []);
 
-  // LOGIN FUNCTION
+  const startSession = (data) => {
+    const { token, ...userData } = data;
+    if (token) localStorage.setItem('token', token);
+    storeUser(userData);
+    setUser(userData);
+  };
+
   const login = async (email, password) => {
     try {
       const { data } = await axios.post('/auth/login', { email, password });
-      
-      // If successful, save token and user data
-      const userData = data.user ?? data;
-      const token = data.token ?? userData.token;
-      if (token) localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(userData));
-      setUser(userData);
+      startSession(data);
       router.push('/dashboard');
-    
     } catch (error) {
-      console.error('Login failed:', error.response?.data?.message || error.message);
       toast.error(error.response?.data?.message || 'Login failed. Please check your credentials.');
     }
   };
 
-  // REGISTER FUNCTION
-  const register = async (userData) => {
+  const register = async ({ name, email, password }) => {
     try {
-        const { data } = await axios.post('/auth/register', userData);
-        
-        // If successful, save token and user data
-        const newUser = data.user ?? data;
-        const token = data.token ?? newUser.token;
-        if (token) localStorage.setItem('token', token);
-        localStorage.setItem('user', JSON.stringify(newUser));
-        setUser(newUser);
-        router.push('/dashboard');
-        toast.success("Account created successfully! 🎉");
-    
+      const { data } = await axios.post('/auth/register', { name, email, password });
+      startSession(data);
+      router.push('/dashboard');
+      toast.success('Account created. Welcome to PantryPal.');
     } catch (error) {
-        console.error("Registration failed", error.response?.data?.message || error.message);
-        toast.error(error.response?.data?.message || 'Registration failed. Please try again.');
+      toast.error(error.response?.data?.message || 'Registration failed. Please try again.');
     }
+  };
+
+  // Save profile changes to the server and keep the local session in sync
+  const updateUser = async (changes) => {
+    const { data } = await axios.put('/users/profile', changes);
+    const { token, ...userData } = data;
+    storeUser(userData);
+    setUser(userData);
+    return userData;
   };
 
   const logout = () => {
@@ -97,7 +97,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, register, logout, updateUser, loading }}>
       {children}
     </AuthContext.Provider>
   );

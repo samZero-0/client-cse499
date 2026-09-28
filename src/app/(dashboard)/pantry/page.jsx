@@ -1,16 +1,44 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
+import Link from 'next/link';
+import toast from 'react-hot-toast';
 import Navbar from '@/components/common/Navbar';
+import PageBanner from '@/components/common/PageBanner';
+import StatTile from '@/components/common/StatTile';
+import SignInPrompt from '@/components/common/SignInPrompt';
 import PantryItemDetail from '@/components/pantry/PantryItemDetail';
 import useAxios from '@/hooks/useAxios';
-import { calculateExpiry } from '@/utils/calculateExpiry'; // Ensure you have this utility
-import toast, { Toaster } from 'react-hot-toast';
-import { 
-  FaBoxOpen, FaExclamationCircle, FaLeaf, FaSearch, 
-  FaPlus, FaChartPie, FaCalendarAlt, FaFire, FaCheckCircle, FaClock, FaTrash 
-} from 'react-icons/fa';
+import { AuthContext } from '@/context/AuthContext';
+import { getExpiryInfo } from '@/utils/calculateExpiry';
+import { apiError } from '@/utils/pricing';
+
+const PLACEHOLDER = 'https://placehold.co/600x400/EDF0DC/5A6558?text=PantryPal';
+
+const filters = [
+  { value: 'all', label: 'All' },
+  { value: 'fresh', label: 'Fresh' },
+  { value: 'expiring', label: 'Use soon' },
+  { value: 'expired', label: 'Expired' },
+];
+
+const sortOptions = [
+  { value: 'expiry', label: 'Expiry: soonest first' },
+  { value: 'recent', label: 'Recently added' },
+  { value: 'name', label: 'Name: A to Z' },
+];
+
+// Items saved before quantities/prices were tracked count as one unit at the current price
+const unitsOf = (item) => item.quantity ?? 1;
+const unitPriceOf = (item) => item.price ?? item.product?.price ?? 0;
+
+const matchesFilter = (status, filter) =>
+  filter === 'all' ||
+  (filter === 'fresh' && status === 'fresh') ||
+  (filter === 'expiring' && status === 'expiring_soon') ||
+  (filter === 'expired' && status === 'expired');
 
 export default function PantryPage() {
+  const { user, loading: authLoading } = useContext(AuthContext);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedItem, setSelectedItem] = useState(null);
@@ -19,210 +47,283 @@ export default function PantryPage() {
   const [sortBy, setSortBy] = useState('expiry');
   const axios = useAxios();
 
-  useEffect(() => {
-      fetchPantry();
-  }, []);
-
   const fetchPantry = async () => {
-      try {
-          const { data } = await axios.get('/pantry');
-          setItems(data);
-          setLoading(false);
-      } catch (error) {
-          console.error("Error fetching pantry", error);
-          toast.error("Failed to load pantry");
-          setLoading(false);
-      }
-  };
-
-  // --- STATS LOGIC ---
-  const calculateStats = () => {
-    let expiring = 0;
-    let expired = 0;
-    let fresh = 0;
-    let totalVal = 0;
-
-    items.forEach(item => {
-        const { status, daysLeft } = calculateExpiry(item.purchaseDate, item.shelfLifeDays);
-        if (status === 'expired') expired++;
-        else if (daysLeft <= 3) expiring++;
-        else fresh++;
-
-        // Handle case where product might be null (deleted from store)
-        const price = item.product?.price || 0;
-        totalVal += price;
-    });
-
-    return { expiring, expired, fresh, totalVal };
-  };
-
-  const { expiring, expired, fresh, totalVal } = calculateStats();
-
-  // --- FILTER & SORT ---
-  const filteredItems = items.filter(item => {
-    const itemName = item.name || item.product?.name || "Unknown";
-    const matchesSearch = itemName.toLowerCase().includes(searchTerm.toLowerCase());
-    const { status, daysLeft } = calculateExpiry(item.purchaseDate, item.shelfLifeDays);
-    
-    let matchesFilter = true;
-    if (filterStatus === 'fresh') matchesFilter = daysLeft > 7;
-    else if (filterStatus === 'expiring') matchesFilter = daysLeft <= 7 && daysLeft >= 0;
-    else if (filterStatus === 'expired') matchesFilter = status === 'expired';
-    
-    return matchesSearch && matchesFilter;
-  }).sort((a, b) => {
-    if (sortBy === 'expiry') {
-      const daysA = calculateExpiry(a.purchaseDate, a.shelfLifeDays).daysLeft;
-      const daysB = calculateExpiry(b.purchaseDate, b.shelfLifeDays).daysLeft;
-      return daysA - daysB;
-    } else if (sortBy === 'name') {
-      return (a.name || "").localeCompare(b.name || "");
-    } else {
-      return new Date(b.purchaseDate) - new Date(a.purchaseDate);
+    try {
+      const { data } = await axios.get('/pantry');
+      setItems(data);
+    } catch (error) {
+      console.error('Error fetching pantry', error);
+      toast.error('Failed to load pantry');
+    } finally {
+      setLoading(false);
     }
+  };
+
+  useEffect(() => {
+    if (user) fetchPantry();
+  }, [user]);
+
+  // --- Stats ---
+  const withExpiry = items.map((item) => ({ item, expiry: getExpiryInfo(item) }));
+  const counts = { all: items.length, fresh: 0, expiring: 0, expired: 0 };
+  let totalValue = 0;
+  withExpiry.forEach(({ item, expiry }) => {
+    if (expiry.status === 'expired') counts.expired++;
+    else if (expiry.status === 'expiring_soon') counts.expiring++;
+    else counts.fresh++;
+    totalValue += unitPriceOf(item) * unitsOf(item);
   });
 
-  const handleConsume = () => {
-    toast.success("Item updated! ✅");
-    setSelectedItem(null);
-    fetchPantry();
+  // --- Filter & sort ---
+  const visible = withExpiry
+    .filter(({ item, expiry }) => {
+      const name = (item.name || item.product?.name || '').toLowerCase();
+      return name.includes(searchTerm.toLowerCase()) && matchesFilter(expiry.status, filterStatus);
+    })
+    .sort((a, b) => {
+      if (sortBy === 'expiry') return a.expiry.daysLeft - b.expiry.daysLeft;
+      if (sortBy === 'name') return (a.item.name || '').localeCompare(b.item.name || '');
+      return new Date(b.item.purchaseDate) - new Date(a.item.purchaseDate);
+    });
+
+  // Use up one unit; the server removes the item when none are left
+  const handleConsume = async (item) => {
+    try {
+      const { data } = await axios.patch(`/pantry/${item._id}/consume`, { amount: 1 });
+      if (data.removed) {
+        setItems((prev) => prev.filter((i) => i._id !== item._id));
+        setSelectedItem(null);
+        toast.success(`${item.name} used up and removed from your pantry`);
+      } else {
+        setItems((prev) => prev.map((i) => (i._id === item._id ? data : i)));
+        setSelectedItem(data);
+        toast.success(`Marked one ${item.name} as used. ${data.quantity} left.`);
+      }
+    } catch (error) {
+      toast.error(apiError(error, 'Could not update this item'));
+    }
   };
 
-  if (loading) return <div className="text-center py-20">Loading Pantry...</div>;
+  const handleRemove = async (item) => {
+    try {
+      await axios.delete(`/pantry/${item._id}`);
+      setItems((prev) => prev.filter((i) => i._id !== item._id));
+      setSelectedItem(null);
+      toast.success(`${item.name} removed from your pantry`);
+    } catch (error) {
+      toast.error(apiError(error, 'Could not remove this item'));
+    }
+  };
+
+  const showSignIn = !authLoading && !user;
+  const isLoading = !showSignIn && (authLoading || loading);
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
-      <Navbar />
-      <Toaster position="top-right" />
-      <div className="container mx-auto px-4 py-8 flex-grow">
-        
-        {/* Header */}
-        <div className="mb-8 flex flex-col md:flex-row justify-between items-center gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-800">My Smart Pantry 🥬</h1>
-            <p className="text-gray-500">Track what you bought & reduce waste.</p>
-          </div>
-        </div>
+    <div className="flex min-h-screen flex-col bg-canvas">
+      <Navbar wide />
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <StatCard title="Total Items" value={items.length} icon={<FaBoxOpen />} color="blue" />
-          <StatCard title="Value" value={`৳${totalVal}`} icon={<FaChartPie />} color="emerald" />
-          <StatCard title="Expiring Soon" value={expiring} icon={<FaClock />} color="orange" alert={expiring > 0} />
-          <StatCard title="Fresh" value={fresh} icon={<FaCheckCircle />} color="green" />
-        </div>
-
-        {/* Toolbar */}
-        <div className="bg-white p-4 rounded-xl shadow-sm border mb-6 flex flex-col md:flex-row gap-4">
-          <div className="relative flex-grow">
-            <FaSearch className="absolute left-3 top-3 text-gray-400" />
-            <input 
-              type="text" 
-              placeholder="Search items..." 
+      <main className="mx-auto w-full max-w-[1600px] flex-grow px-5 pb-16 pt-4 lg:px-8 lg:pt-6">
+        <PageBanner
+          eyebrow="My pantry"
+          title="Everything in your kitchen."
+          description="Items you buy land here with their expiry dates, so you can use them before they go to waste."
+          image="/images/auth-register.jpg"
+          imagePosition="center 30%"
+        >
+          <div className="w-full md:w-80 lg:w-96">
+            <label htmlFor="pantry-search" className="sr-only">
+              Search pantry
+            </label>
+            <input
+              id="pantry-search"
+              type="search"
+              placeholder="Search your pantry..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              disabled={showSignIn}
+              className="w-full rounded-full bg-surface px-5 py-3 text-sm text-ink shadow-xl shadow-black/20 placeholder:text-ink-muted focus:outline-none disabled:opacity-60"
             />
           </div>
-          <div className="flex gap-2 overflow-x-auto">
-             {['all', 'fresh', 'expiring', 'expired'].map(status => (
-                <button 
-                  key={status}
-                  onClick={() => setFilterStatus(status)}
-                  className={`px-4 py-2 rounded-lg capitalize whitespace-nowrap ${filterStatus === status ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-700'}`}
-                >
-                  {status}
-                </button>
-             ))}
-          </div>
-        </div>
+        </PageBanner>
 
-        {/* Grid */}
-        {filteredItems.length === 0 ? (
-          <div className="text-center py-12 text-gray-500">No items found. Go buy something!</div>
+        {showSignIn ? (
+          <SignInPrompt
+            title="Log in to see your pantry."
+            description="Your pantry fills up automatically as you shop, and shows what to use before it expires."
+          />
         ) : (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {filteredItems.map((item) => (
-              <PantryCard 
-                key={item._id} 
-                item={item} 
-                onClick={() => setSelectedItem(item)}
+          <>
+            {/* Stats */}
+            <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+              <StatTile label="In your pantry" value={isLoading ? '...' : counts.all} note="products tracked" tone="lime" />
+              <StatTile
+                label="Use soon"
+                value={isLoading ? '...' : counts.expiring}
+                note="within 3 days"
+                highlight={counts.expiring > 0}
               />
-            ))}
-          </div>
+              <StatTile label="Expired" value={isLoading ? '...' : counts.expired} note="past their date" />
+              <StatTile label="Pantry value" value={isLoading ? '...' : `৳${totalValue}`} note="what you paid for what is left" tone="sky" />
+            </div>
+
+            {/* Toolbar */}
+            <div className="mt-10 flex flex-col gap-4 border-b border-line pb-5 md:flex-row md:items-center md:justify-between">
+              <div
+                role="group"
+                aria-label="Filter by freshness"
+                className="-mx-5 flex gap-2 overflow-x-auto px-5 [scrollbar-width:none] md:mx-0 md:px-0"
+              >
+                {filters.map((filter) => (
+                  <button
+                    key={filter.value}
+                    type="button"
+                    onClick={() => setFilterStatus(filter.value)}
+                    aria-pressed={filterStatus === filter.value}
+                    className={`shrink-0 rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
+                      filterStatus === filter.value
+                        ? 'border-primary bg-primary text-on-primary'
+                        : 'border-line bg-surface text-ink-muted hover:text-ink'
+                    }`}
+                  >
+                    {filter.label}
+                    <span className="ml-2 tabular-nums opacity-60">{isLoading ? '' : counts[filter.value]}</span>
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex items-center gap-3">
+                <label htmlFor="pantry-sort" className="sr-only">
+                  Sort pantry
+                </label>
+                <select
+                  id="pantry-sort"
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="rounded-full border border-line bg-surface px-4 py-2 text-sm font-medium text-ink focus:border-olive focus:outline-none"
+                >
+                  {sortOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Items */}
+            <div className="mt-6">
+              {isLoading ? (
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {Array.from({ length: 8 }).map((_, i) => (
+                    <div key={i} className="overflow-hidden rounded-[1.5rem] border border-line bg-surface">
+                      <div className="aspect-[4/3] animate-pulse bg-surface-muted" />
+                      <div className="space-y-3 p-5">
+                        <div className="h-4 w-2/3 animate-pulse rounded-full bg-surface-muted" />
+                        <div className="h-2 w-full animate-pulse rounded-full bg-surface-muted" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : items.length === 0 ? (
+                <EmptyState
+                  title="Your pantry is empty."
+                  text="Everything you order is added here automatically, with its use-by date."
+                  action={
+                    <Link
+                      href="/products"
+                      className="rounded-full bg-primary px-6 py-3 text-sm font-semibold text-on-primary transition-colors hover:bg-primary-hover"
+                    >
+                      Shop groceries
+                    </Link>
+                  }
+                />
+              ) : visible.length === 0 ? (
+                <EmptyState
+                  title="Nothing matches."
+                  text="Try another search or a different freshness filter."
+                  action={
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSearchTerm('');
+                        setFilterStatus('all');
+                      }}
+                      className="rounded-full bg-primary px-6 py-3 text-sm font-semibold text-on-primary transition-colors hover:bg-primary-hover"
+                    >
+                      Show everything
+                    </button>
+                  }
+                />
+              ) : (
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 xl:gap-5">
+                  {visible.map(({ item, expiry }) => (
+                    <PantryCard key={item._id} item={item} expiry={expiry} onClick={() => setSelectedItem(item)} />
+                  ))}
+                </div>
+              )}
+            </div>
+          </>
         )}
+      </main>
 
-      </div>
-
-      {/* Modal */}
       {selectedItem && (
-        <PantryItemDetail 
-            item={selectedItem} 
-            onClose={() => setSelectedItem(null)} 
-            onConsume={handleConsume}
+        <PantryItemDetail
+          item={selectedItem}
+          onClose={() => setSelectedItem(null)}
+          onConsume={() => handleConsume(selectedItem)}
+          onRemove={() => handleRemove(selectedItem)}
         />
       )}
     </div>
   );
 }
 
-// Sub-components
-function StatCard({ title, value, icon, color, alert }) {
-    const colors = {
-        blue: 'bg-blue-100 text-blue-600',
-        emerald: 'bg-emerald-100 text-emerald-600',
-        orange: 'bg-orange-100 text-orange-600',
-        green: 'bg-green-100 text-green-600'
-    };
-    return (
-        <div className={`bg-white p-4 rounded-xl shadow-sm border flex items-center gap-4 ${alert ? 'ring-2 ring-orange-400' : ''}`}>
-            <div className={`w-12 h-12 rounded-lg flex items-center justify-center text-xl ${colors[color]}`}>
-                {icon}
-            </div>
-            <div>
-                <p className="text-gray-500 text-xs uppercase font-bold">{title}</p>
-                <p className="text-2xl font-bold text-gray-800">{value}</p>
-            </div>
-        </div>
-    );
+function EmptyState({ title, text, action }) {
+  return (
+    <div className="rounded-[2rem] border border-dashed border-line px-6 py-20 text-center">
+      <h3 className="text-2xl font-extrabold tracking-tight text-ink">{title}</h3>
+      <p className="mx-auto mt-3 max-w-sm text-ink-muted">{text}</p>
+      <div className="mt-8">{action}</div>
+    </div>
+  );
 }
 
-function PantryCard({ item, onClick }) {
-    const { status, daysLeft } = calculateExpiry(item.purchaseDate, item.shelfLifeDays);
-    
-    // Config based on status
-    let badgeColor = 'bg-green-100 text-green-700';
-    let label = `${daysLeft} days left`;
-    
-    if (status === 'expired') {
-        badgeColor = 'bg-red-100 text-red-700';
-        label = 'Expired';
-    } else if (daysLeft <= 3) {
-        badgeColor = 'bg-orange-100 text-orange-700';
-    }
+function PantryCard({ item, expiry, onClick }) {
+  const useBy = new Date(expiry.expiryDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
-    // Use fallback image if product populated data is missing
-    const imgUrl = item.product?.imageUrl || 'https://placehold.co/600x400?text=No+Image';
-    const price = item.product?.price || 0;
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="group flex flex-col overflow-hidden rounded-[1.5rem] border border-line bg-surface text-left transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/5"
+    >
+      <div className="relative aspect-[4/3] w-full overflow-hidden bg-surface-muted">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={item.product?.imageUrl || PLACEHOLDER}
+          alt={item.name}
+          onError={(e) => {
+            if (e.currentTarget.src !== PLACEHOLDER) e.currentTarget.src = PLACEHOLDER;
+          }}
+          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+        />
+        <span className={`absolute left-3 top-3 rounded-full bg-surface px-3 py-1 text-xs font-bold ${expiry.classes.text}`}>
+          {expiry.label}
+        </span>
+      </div>
 
-    return (
-      <div 
-        onClick={onClick}
-        className="group bg-white rounded-xl shadow-sm border hover:shadow-md transition cursor-pointer overflow-hidden"
-      >
-        <div className="h-40 bg-gray-100 relative">
-          <img src={imgUrl} alt={item.name} className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
-          <div className={`absolute top-2 right-2 px-2 py-1 rounded text-xs font-bold ${badgeColor}`}>
-            {label}
-          </div>
+      <div className="flex w-full flex-1 flex-col p-5">
+        <div className="flex items-start justify-between gap-3">
+          <h3 className="line-clamp-1 text-lg font-bold tracking-tight text-ink">{item.name}</h3>
+          <span className="shrink-0 text-sm font-semibold text-ink-muted tabular-nums">&times; {unitsOf(item)}</span>
         </div>
-        <div className="p-4">
-          <h3 className="font-bold text-gray-800 line-clamp-1">{item.name}</h3>
-          <div className="flex justify-between items-center mt-2">
-            <span className="text-xs text-gray-500">Added: {new Date(item.purchaseDate).toLocaleDateString()}</span>
-            <span className="font-bold text-emerald-600">৳{price}</span>
-          </div>
+        <p className="mt-1 text-sm text-ink-muted">
+          {expiry.status === 'expired' ? 'Expired' : 'Use by'} {useBy}
+        </p>
+        <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-surface-muted">
+          <div className={`h-full rounded-full ${expiry.classes.bar}`} style={{ width: `${expiry.percent}%` }} />
         </div>
       </div>
-    );
+    </button>
+  );
 }

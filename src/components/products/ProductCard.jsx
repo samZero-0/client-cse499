@@ -1,215 +1,135 @@
 'use client';
-import Button from '@/components/common/Button';
-import { useCart } from '@/context/CartContext';
 import Link from 'next/link';
-import { FaShoppingCart, FaHeart, FaEye, FaStar, FaFire } from 'react-icons/fa';
-import { useState } from 'react';
+import toast from 'react-hot-toast';
+import { useCart } from '@/context/CartContext';
+
+const PLACEHOLDER = 'https://placehold.co/600x600/EDF0DC/5A6558?text=PantryPal';
+
+// Swap in the placeholder if a product image URL is broken
+const handleImageError = (e) => {
+  if (e.currentTarget.src !== PLACEHOLDER) e.currentTarget.src = PLACEHOLDER;
+};
+
+function stockInfo(stock) {
+  if (stock > 10) return { status: 'in-stock', label: 'In stock', className: 'text-ink-muted' };
+  if (stock > 0) return { status: 'low-stock', label: `Only ${stock} left`, className: 'text-[#B06A2B] dark:text-[#E0A96D]' };
+  return { status: 'out-of-stock', label: 'Out of stock', className: 'text-[#B4543A] dark:text-[#E08A74]' };
+}
+
+function Badges({ discount, isNew }) {
+  if (!discount && !isNew) return null;
+  return (
+    <div className="absolute left-3 top-3 flex flex-col items-start gap-1.5">
+      {discount > 0 && (
+        <span className="rounded-full bg-lime px-2.5 py-1 text-xs font-bold text-forest">{discount}% off</span>
+      )}
+      {isNew && (
+        <span className="rounded-full bg-sky px-2.5 py-1 text-xs font-bold text-forest">New</span>
+      )}
+    </div>
+  );
+}
 
 export default function ProductCard({ product, viewMode = 'grid' }) {
   const { addToCart } = useCart();
-  const [isHovered, setIsHovered] = useState(false);
-  const [isFavorite, setIsFavorite] = useState(false);
 
-  const stockStatus = product.stock > 10 ? 'in-stock' : product.stock > 0 ? 'low-stock' : 'out-of-stock';
-  const discount = product.originalPrice ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100) : 0;
+  const stock = stockInfo(product.stock);
+  const soldOut = stock.status === 'out-of-stock';
+  const discount = product.originalPrice
+    ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
+    : 0;
+  const href = `/products/${product._id}`;
+
+  const addButton = (
+    <button
+      type="button"
+      onClick={async () => {
+        if (await addToCart(product)) toast.success(`${product.name} added to cart`);
+      }}
+      disabled={soldOut}
+      className="shrink-0 rounded-full bg-primary px-4 py-2.5 text-sm font-semibold text-on-primary transition-colors hover:bg-primary-hover disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-ink-muted"
+    >
+      {soldOut ? 'Sold out' : 'Add to cart'}
+    </button>
+  );
+
+  const price = (
+    <div className="flex items-baseline gap-2">
+      <span className="text-xl font-extrabold tracking-tight text-ink tabular-nums">৳{product.price}</span>
+      {discount > 0 && (
+        <span className="text-sm text-ink-muted line-through tabular-nums">৳{product.originalPrice}</span>
+      )}
+    </div>
+  );
 
   if (viewMode === 'list') {
     return (
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-all duration-300 flex flex-col sm:flex-row group">
-        {/* Image Section */}
-        <div className="w-full sm:w-48 h-48 sm:h-auto relative overflow-hidden bg-gray-100 flex-shrink-0">
-          <img 
-            src={product.imageUrl || 'https://placehold.co/600x400?text=No+Image'} 
+      <article className="group flex flex-col overflow-hidden rounded-[1.5rem] border border-line bg-surface transition-shadow duration-300 hover:shadow-xl hover:shadow-black/5 sm:flex-row">
+        <Link href={href} className="relative block aspect-[4/3] shrink-0 overflow-hidden bg-surface-muted sm:aspect-auto sm:w-56">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={product.imageUrl || PLACEHOLDER}
             alt={product.name}
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+            onError={handleImageError}
+            className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
           />
-          {discount > 0 && (
-            <div className="absolute top-3 left-3 bg-gradient-to-r from-red-500 to-pink-500 text-white px-3 py-1 rounded-full text-sm font-bold flex items-center gap-1 shadow-lg">
-              <FaFire className="text-xs" />
-              {discount}% OFF
-            </div>
-          )}
-        </div>
-        
-        <div className="p-6 flex-grow flex flex-col justify-between">
+          <Badges discount={discount} isNew={product.isNew} />
+        </Link>
+
+        <div className="flex flex-1 flex-col justify-between gap-5 p-6">
           <div>
-            <div className="flex justify-between items-start mb-3">
-              <Link href={`/products/${product._id}`} className="hover:text-emerald-600 transition flex-grow">
-                <h3 className="font-bold text-xl text-gray-900">{product.name}</h3>
-              </Link>
-              <span className={`px-3 py-1 rounded-full text-xs font-semibold ml-4 whitespace-nowrap ${
-                product.category === 'Vegetables' ? 'bg-green-100 text-green-700' :
-                product.category === 'Fruits' ? 'bg-red-100 text-red-700' :
-                product.category === 'Dairy' ? 'bg-blue-100 text-blue-700' :
-                'bg-emerald-100 text-emerald-700'
-              }`}>
-                {product.category}
-              </span>
+            <div className="flex items-center justify-between gap-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-accent">{product.category}</p>
+              <p className={`text-xs font-medium ${stock.className}`}>{stock.label}</p>
             </div>
-            
-            <p className="text-gray-600 mb-4 line-clamp-2">{product.description}</p>
-            
-            <div className="flex items-center gap-4 mb-4">
-              <div className="flex items-center gap-1 text-yellow-400">
-                {[...Array(5)].map((_, i) => (
-                  <FaStar key={i} className={i < 4 ? 'fill-current' : 'text-gray-300'} />
-                ))}
-                <span className="text-gray-600 text-sm ml-1">(4.0)</span>
-              </div>
-              <div className={`text-sm font-medium ${
-                stockStatus === 'in-stock' ? 'text-green-600' :
-                stockStatus === 'low-stock' ? 'text-orange-600' :
-                'text-red-600'
-              }`}>
-                {stockStatus === 'in-stock' ? '✓ In Stock' :
-                 stockStatus === 'low-stock' ? '⚠ Only few left' :
-                 '✗ Out of Stock'}
-              </div>
-            </div>
+            <Link href={href}>
+              <h3 className="mt-2 text-xl font-bold tracking-tight text-ink transition-colors hover:text-accent">
+                {product.name}
+              </h3>
+            </Link>
+            <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-ink-muted">{product.description}</p>
           </div>
-          
-          <div className="flex justify-between items-center">
-            <div>
-              {discount > 0 && (
-                <span className="text-gray-400 line-through text-lg mr-2">৳{product.originalPrice}</span>
-              )}
-              <span className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
-                ৳{product.price}
-              </span>
-            </div>
-            
-            <div className="flex gap-2">
-              <button
-                onClick={() => setIsFavorite(!isFavorite)}
-                className={`p-3 rounded-xl transition-all ${
-                  isFavorite 
-                    ? 'bg-red-100 text-red-600' 
-                    : 'bg-gray-100 text-gray-600 hover:bg-red-50 hover:text-red-600'
-                }`}
-              >
-                <FaHeart className={isFavorite ? 'fill-current' : ''} />
-              </button>
-              <Button 
-                onClick={() => addToCart(product)} 
-                className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 flex items-center gap-2"
-                disabled={stockStatus === 'out-of-stock'}
-              >
-                <FaShoppingCart />
-                Add to Cart
-              </Button>
-            </div>
+          <div className="flex items-center justify-between gap-4">
+            {price}
+            {addButton}
           </div>
         </div>
-      </div>
+      </article>
     );
   }
 
   return (
-    <div 
-      className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-2xl transition-all duration-300 flex flex-col h-full group transform hover:-translate-y-1"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      {/* Image Section */}
-      <div className="h-56 bg-gray-100 relative overflow-hidden">
-        <img 
-          src={product.imageUrl || 'https://placehold.co/600x400?text=No+Image'} 
+    <article className="group flex h-full flex-col overflow-hidden rounded-[1.5rem] border border-line bg-surface transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/5">
+      <Link href={href} className="relative block aspect-square overflow-hidden bg-surface-muted">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={product.imageUrl || PLACEHOLDER}
           alt={product.name}
-          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+          onError={handleImageError}
+          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
         />
-        
-        {/* Badges */}
-        <div className="absolute top-3 left-3 flex flex-col gap-2">
-          {discount > 0 && (
-            <div className="bg-gradient-to-r from-red-500 to-pink-500 text-white px-3 py-1 rounded-full text-sm font-bold flex items-center gap-1 shadow-lg">
-              <FaFire className="text-xs" />
-              {discount}% OFF
-            </div>
-          )}
-          {product.isNew && (
-            <div className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
-              NEW
-            </div>
-          )}
-        </div>
-
-        {/* Quick Actions */}
-        <div className={`absolute top-3 right-3 flex flex-col gap-2 transition-all duration-300 ${
-          isHovered ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'
-        }`}>
-          <button
-            onClick={() => setIsFavorite(!isFavorite)}
-            className={`w-10 h-10 rounded-full flex items-center justify-center transition-all shadow-lg ${
-              isFavorite 
-                ? 'bg-red-500 text-white' 
-                : 'bg-white text-gray-600 hover:bg-red-50 hover:text-red-600'
-            }`}
-          >
-            <FaHeart className={isFavorite ? 'fill-current' : ''} />
-          </button>
-          <Link
-            href={`/products/${product._id}`}
-            className="w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-emerald-50 hover:text-emerald-600 transition-all shadow-lg text-gray-600"
-          >
-            <FaEye />
-          </Link>
-        </div>
-
-        {/* Stock Status Bar */}
-        {stockStatus === 'low-stock' && (
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs py-1 px-3 text-center font-medium">
-            Hurry! Only {product.stock} left
-          </div>
-        )}
-      </div>
-      
-      <div className="p-5 flex flex-col flex-grow">
-        <div className="flex justify-between items-start mb-2">
-          <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-            product.category === 'Vegetables' ? 'bg-green-100 text-green-700' :
-            product.category === 'Fruits' ? 'bg-red-100 text-red-700' :
-            product.category === 'Dairy' ? 'bg-blue-100 text-blue-700' :
-            'bg-emerald-100 text-emerald-700'
-          }`}>
-            {product.category}
+        <Badges discount={discount} isNew={product.isNew} />
+        {stock.status !== 'in-stock' && (
+          <span className="absolute bottom-3 left-3 rounded-full bg-surface/90 px-2.5 py-1 text-xs font-semibold text-ink backdrop-blur">
+            {stock.label}
           </span>
-        </div>
+        )}
+      </Link>
 
-        <Link href={`/products/${product._id}`} className="hover:text-emerald-600 transition mb-2">
-          <h3 className="font-bold text-lg text-gray-900 line-clamp-2 min-h-[3.5rem]">{product.name}</h3>
+      <div className="flex flex-1 flex-col p-5">
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-accent">{product.category}</p>
+        <Link href={href}>
+          <h3 className="mt-2 line-clamp-2 text-lg font-bold leading-snug tracking-tight text-ink transition-colors hover:text-accent">
+            {product.name}
+          </h3>
         </Link>
-        
-        <p className="text-gray-500 text-sm mb-3 line-clamp-2 flex-grow">{product.description}</p>
-        
-        {/* Rating */}
-        <div className="flex items-center gap-1 mb-4">
-          {[...Array(5)].map((_, i) => (
-            <FaStar key={i} className={`text-sm ${i < 4 ? 'text-yellow-400' : 'text-gray-300'}`} />
-          ))}
-          <span className="text-gray-500 text-xs ml-1">(4.0)</span>
-        </div>
+        <p className="mt-1.5 line-clamp-2 flex-1 text-sm leading-relaxed text-ink-muted">{product.description}</p>
 
-        {/* Price and Action */}
-        <div className="mt-auto">
-          <div className="flex items-baseline gap-2 mb-3">
-            <span className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
-              ৳{product.price}
-            </span>
-            {discount > 0 && (
-              <span className="text-gray-400 line-through text-sm">৳{product.originalPrice}</span>
-            )}
-          </div>
-          
-          <Button 
-            onClick={() => addToCart(product)} 
-            className="w-full py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 flex items-center justify-center gap-2 shadow-md hover:shadow-lg transform hover:scale-105 transition-all"
-            disabled={stockStatus === 'out-of-stock'}
-          >
-            <FaShoppingCart />
-            {stockStatus === 'out-of-stock' ? 'Out of Stock' : 'Add to Cart'}
-          </Button>
+        <div className="mt-5 flex items-center justify-between gap-2">
+          {price}
+          {addButton}
         </div>
       </div>
-    </div>
+    </article>
   );
 }
